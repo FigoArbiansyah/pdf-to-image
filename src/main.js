@@ -388,11 +388,41 @@ function yieldToMainThread(ms = 10) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Helper: Fast Unsharp Mask Sharpening Filter for HD Image Upscaling
+function sharpenImageData(ctx, width, height, mix = 0.25) {
+  try {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const pixels = imageData.data;
+    const copy = new Uint8ClampedArray(pixels);
+    const w = width;
+    const h = height;
+
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const i = idx + c;
+          const top = i - w * 4;
+          const bottom = i + w * 4;
+          const left = i - 4;
+          const right = i + 4;
+
+          const sharp = 5 * copy[i] - copy[top] - copy[bottom] - copy[left] - copy[right];
+          pixels[i] = Math.min(255, Math.max(0, Math.round(copy[i] * (1 - mix) + sharp * mix)));
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  } catch (e) {
+    console.warn('Sharpening filter bypassed:', e);
+  }
+}
+
 // PDF Conversion Routine
 async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale) {
   const total = pagesToConvert.length;
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   for (let i = 0; i < total; i++) {
     const pageNum = pagesToConvert[i];
@@ -405,6 +435,9 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
       
       canvas.width = viewport.width;
       canvas.height = viewport.height;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       if (selectedFormat === 'jpg') {
         ctx.fillStyle = '#FFFFFF';
@@ -433,11 +466,11 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
   }
 }
 
-// Images Conversion Routine (PNG <-> JPG <-> WEBP)
+// Images Conversion Routine (PNG <-> JPG <-> WEBP with HD Upscaling)
 async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale) {
   const total = indicesToConvert.length;
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   for (let i = 0; i < total; i++) {
     const itemIndex = indicesToConvert[i] - 1;
@@ -452,12 +485,21 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
       canvas.width = Math.round(img.naturalWidth * scale);
       canvas.height = Math.round(img.naturalHeight * scale);
 
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
       if (selectedFormat === 'jpg') {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Apply HD edge sharpening filter when upscaling (>1.0x)
+      if (scale > 1.0) {
+        const sharpMix = Math.min(0.3, 0.12 * scale);
+        sharpenImageData(ctx, canvas.width, canvas.height, sharpMix);
+      }
 
       const dataUrl = canvas.toDataURL(mimeType, quality);
       const blob = await (await fetch(dataUrl)).blob();
