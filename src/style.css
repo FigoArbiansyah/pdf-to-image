@@ -979,6 +979,7 @@ body {
   .brand-logo {
     width: 60px;
     height: 48px;
+    display: none;
   }
 
   .brand-title {
@@ -1098,6 +1099,7 @@ body {
 
   .custom-select,
   .custom-input {
-    font-size: 16px; /* Prevents auto-zoom on iOS */
+    font-size: 16px;
+    /* Prevents auto-zoom on iOS */
   }
 }
