@@ -947,8 +947,45 @@ body {
 }
 
 /* Utilities */
-.hidden {
-  display: none !important;
+/* FAQ Section */
+.faq-section {
+  margin-top: 0.5rem;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.faq-item {
+  background: #18181c;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.faq-question {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faq-question i {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.faq-answer {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .app-footer {
