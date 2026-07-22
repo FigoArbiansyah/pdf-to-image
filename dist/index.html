@@ -15,8 +15,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
   <!-- CSS -->
-  <script type="module" crossorigin src="/assets/index-CQPuiMnL.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-C6GhDlPw.css">
+  <script type="module" crossorigin src="/assets/index-D68a-I0k.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DWC-gbZi.css">
 </head>
 <body>
   <div class="container">
@@ -33,7 +33,7 @@
             <h1 class="brand-title">PDF to Image</h1>
             <span class="brand-tag">Studio</span>
           </div>
-          <p class="brand-subtitle">Konversi dokumen PDF ke PNG &amp; JPG resolusi tinggi secara lokal.</p>
+          <p class="brand-subtitle">Konversi PDF &amp; Gambar (PNG, JPG, WEBP) resolusi tinggi secara lokal.</p>
         </div>
       </div>
       <div class="header-right">
@@ -48,21 +48,21 @@
     <main class="app-main">
       <!-- Upload Section -->
       <section class="card upload-card" id="drop-zone">
-        <input type="file" id="pdf-input" accept="application/pdf" hidden />
+        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden />
         <div class="upload-content" id="upload-prompt">
           <div class="upload-icon-wrapper">
             <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
           </div>
-          <h3>Tarik &amp; Lepaskan File PDF di Sini</h3>
-          <p>atau <button type="button" class="btn btn-outline" id="browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas PDF</button></p>
-          <span class="file-hint">Mendukung semua berkas .PDF &bull; Berjalan 100% di peramban</span>
+          <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
+          <p>atau <button type="button" class="btn btn-outline" id="browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas (PDF / Gambar)</button></p>
+          <span class="file-hint">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban</span>
         </div>
 
         <!-- Selected File Info State -->
         <div class="file-info-bar hidden" id="file-info">
           <div class="file-details">
-            <div class="file-icon-box">
-              <i class="fa-solid fa-file-pdf"></i>
+            <div class="file-icon-box" id="file-icon-box">
+              <i class="fa-solid fa-file-pdf" id="file-type-icon"></i>
             </div>
             <div class="file-text">
               <h4 id="file-name">document.pdf</h4>
@@ -70,12 +70,12 @@
             </div>
           </div>
           <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File">
-            <i class="fa-solid fa-rotate-left"></i> <span>Ganti PDF</span>
+            <i class="fa-solid fa-rotate-left"></i> <span>Ganti Berkas</span>
           </button>
         </div>
       </section>
 
-      <!-- Settings Panel (Enabled when PDF is loaded) -->
+      <!-- Settings Panel (Enabled when PDF/Image is loaded) -->
       <section class="card settings-card disabled" id="settings-panel">
         <h3 class="section-title"><i class="fa-solid fa-sliders"></i> Pengaturan Konversi</h3>
         
@@ -88,22 +88,29 @@
               <label for="fmt-png" class="format-btn">
                 <i class="fa-solid fa-file-image"></i>
                 <span class="fmt-title">PNG</span>
-                <span class="fmt-desc">Lossless (Kualitas Tinggi)</span>
+                <span class="fmt-desc">Lossless</span>
               </label>
 
               <input type="radio" name="format" id="fmt-jpg" value="jpg" />
               <label for="fmt-jpg" class="format-btn">
                 <i class="fa-solid fa-image"></i>
                 <span class="fmt-title">JPG</span>
-                <span class="fmt-desc">Ringkas &amp; Terkompresi</span>
+                <span class="fmt-desc">Kompresi Ringkas</span>
+              </label>
+
+              <input type="radio" name="format" id="fmt-webp" value="webp" />
+              <label for="fmt-webp" class="format-btn">
+                <i class="fa-solid fa-file-code"></i>
+                <span class="fmt-title">WEBP</span>
+                <span class="fmt-desc">Web Modern</span>
               </label>
             </div>
           </div>
 
-          <!-- Quality Slider (Shown when JPG selected) -->
+          <!-- Quality Slider (Shown when JPG or WEBP selected) -->
           <div class="setting-group hidden" id="quality-group">
             <div class="label-with-value">
-              <label class="setting-label" for="jpg-quality">Kualitas JPG</label>
+              <label class="setting-label" for="jpg-quality" id="quality-label">Kualitas Kompresi</label>
               <span class="val-badge" id="quality-val">90%</span>
             </div>
             <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" />

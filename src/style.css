@@ -461,8 +461,8 @@ body {
 /* Format Radio Buttons */
 .format-toggle {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
 }
 
 .format-toggle input[type="radio"] {

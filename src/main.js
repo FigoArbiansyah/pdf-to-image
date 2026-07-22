@@ -7,8 +7,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Application State
 const state = {
+  inputMode: 'none', // 'none' | 'pdf' | 'images'
   pdfFile: null,
   pdfDocument: null,
+  imageFiles: [], // Array of File objects
   fileNameBase: '',
   totalPages: 0,
   convertedPages: [], // Array of { pageNum, blob, dataUrl, width, height, selected, fileName }
@@ -26,11 +28,13 @@ const elements = {
   fileName: document.getElementById('file-name'),
   fileSize: document.getElementById('file-size'),
   filePages: document.getElementById('file-pages'),
+  fileTypeIcon: document.getElementById('file-type-icon'),
   changeFileBtn: document.getElementById('change-file-btn'),
   
   settingsPanel: document.getElementById('settings-panel'),
   formatRadios: document.querySelectorAll('input[name="format"]'),
   qualityGroup: document.getElementById('quality-group'),
+  qualityLabel: document.getElementById('quality-label'),
   jpgQualitySlider: document.getElementById('jpg-quality'),
   qualityVal: document.getElementById('quality-val'),
   scaleSelect: document.getElementById('scale-select'),
@@ -88,11 +92,11 @@ function init() {
   });
 
   elements.dropZone.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type === 'application/pdf') {
-      loadPdfFile(files[0]);
-    } else {
-      showToast('Mohon pilih berkas dengan format PDF valid.', 'error');
+    e.preventDefault();
+    elements.dropZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      processInputFiles(files);
     }
   });
 
@@ -101,8 +105,10 @@ function init() {
   // Format Radio Handler
   elements.formatRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
-      if (e.target.value === 'jpg') {
+      const fmt = e.target.value;
+      if (fmt === 'jpg' || fmt === 'webp') {
         elements.qualityGroup.classList.remove('hidden');
+        elements.qualityLabel.textContent = `Kualitas ${fmt.toUpperCase()}`;
       } else {
         elements.qualityGroup.classList.add('hidden');
       }
@@ -120,7 +126,6 @@ function init() {
   elements.presetEvenBtn.addEventListener('click', () => setPresetFilter('even'));
   
   elements.pageRangeInput.addEventListener('input', () => {
-    // Remove active state from preset buttons if user types custom range
     document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
   });
 
@@ -143,6 +148,28 @@ function init() {
     if (e.key === 'ArrowLeft') showPrevModalImage();
     if (e.key === 'ArrowRight') showNextModalImage();
   });
+}
+
+// File Selection Handler
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (files.length > 0) {
+    processInputFiles(files);
+  }
+}
+
+// Process Uploaded Files (PDF vs Images)
+function processInputFiles(files) {
+  const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+  const imageFiles = files.filter(f => f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
+
+  if (pdfFiles.length > 0) {
+    loadPdfFile(pdfFiles[0]);
+  } else if (imageFiles.length > 0) {
+    loadImageFiles(imageFiles);
+  } else {
+    showToast('Mohon pilih berkas berformat PDF atau Gambar valid (PNG/JPG/WEBP).', 'error');
+  }
 }
 
 // Preset Filter Handler (All, Odd, Even)
@@ -170,51 +197,66 @@ function setPresetFilter(type) {
   }
 }
 
-// File Selection Handler
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file && file.type === 'application/pdf') {
-    loadPdfFile(file);
-  } else if (file) {
-    showToast('Berkas harus berformat PDF.', 'error');
-  }
-}
-
-// Load PDF & Parse Page Count
+// Load PDF Document
 async function loadPdfFile(file) {
+  resetFileState();
+  state.inputMode = 'pdf';
   state.pdfFile = file;
   state.fileNameBase = file.name.replace(/\.pdf$/i, '');
   
-  // Update File Info UI
   elements.fileName.textContent = file.name;
   elements.fileSize.textContent = formatBytes(file.size);
+  elements.fileTypeIcon.className = 'fa-solid fa-file-pdf';
   elements.uploadPrompt.classList.add('hidden');
   elements.fileInfo.classList.remove('hidden');
   
   try {
-    showToast('Membaca berkas PDF...', 'info');
+    showToast('Membaca dokumen PDF...', 'info');
     const arrayBuffer = await file.arrayBuffer();
     state.pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     state.totalPages = state.pdfDocument.numPages;
     
     elements.filePages.textContent = `${state.totalPages} Halaman`;
     elements.settingsPanel.classList.remove('disabled');
-    
-    // Set default preset to 'all'
     setPresetFilter('all');
-    
     showToast(`PDF Berhasil dimuat (${state.totalPages} Halaman)`, 'success');
   } catch (err) {
     console.error('Error loading PDF:', err);
-    showToast('Gagal membaca dokumen PDF. Berkas mungkin terenkripsi atau rusak.', 'error');
+    showToast('Gagal membaca dokumen PDF.', 'error');
     resetFileState();
   }
 }
 
-// Reset File State
+// Load Image Files (PNG, JPG, WEBP, etc.)
+function loadImageFiles(files) {
+  resetFileState();
+  state.inputMode = 'images';
+  state.imageFiles = files;
+  state.totalPages = files.length;
+  
+  const firstFile = files[0];
+  state.fileNameBase = firstFile.name.replace(/\.[^/.]+$/, '');
+  
+  const totalSizeBytes = files.reduce((acc, f) => acc + f.size, 0);
+  elements.fileName.textContent = files.length === 1 ? firstFile.name : `${files.length} Gambar Dimuat`;
+  elements.fileSize.textContent = formatBytes(totalSizeBytes);
+  elements.filePages.textContent = `${files.length} Item`;
+  elements.fileTypeIcon.className = 'fa-solid fa-file-image';
+  
+  elements.uploadPrompt.classList.add('hidden');
+  elements.fileInfo.classList.remove('hidden');
+  elements.settingsPanel.classList.remove('disabled');
+  
+  setPresetFilter('all');
+  showToast(`Berhasil memuat ${files.length} gambar.`, 'success');
+}
+
+// Reset State
 function resetFileState() {
+  state.inputMode = 'none';
   state.pdfFile = null;
   state.pdfDocument = null;
+  state.imageFiles = [];
   state.fileNameBase = '';
   state.totalPages = 0;
   state.convertedPages = [];
@@ -228,9 +270,9 @@ function resetFileState() {
   elements.galleryGrid.innerHTML = '';
 }
 
-// Start PDF Conversion
+// Start Conversion Process
 async function startConversion() {
-  if (!state.pdfDocument || state.isConverting) return;
+  if (state.inputMode === 'none' || state.isConverting) return;
   
   state.isConverting = true;
   state.convertedPages = [];
@@ -239,69 +281,32 @@ async function startConversion() {
   elements.progressCard.classList.remove('hidden');
   elements.convertBtn.disabled = true;
 
-  // Scroll to progress bar smoothly
   elements.progressCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Settings
+  // Options
   const selectedFormat = document.querySelector('input[name="format"]:checked').value;
-  const mimeType = selectedFormat === 'jpg' ? 'image/jpeg' : 'image/png';
+  let mimeType = 'image/png';
+  if (selectedFormat === 'jpg') mimeType = 'image/jpeg';
+  else if (selectedFormat === 'webp') mimeType = 'image/webp';
+  
   const quality = parseInt(elements.jpgQualitySlider.value, 10) / 100;
   const scale = parseFloat(elements.scaleSelect.value);
   
-  // Page Range Parsing
   const pagesToConvert = parsePageRange(elements.pageRangeInput.value.trim(), state.totalPages);
   
   if (pagesToConvert.length === 0) {
-    showToast('Tidak ada halaman valid dalam rentang yang ditentukan.', 'error');
+    showToast('Tidak ada item valid dalam rentang yang ditentukan.', 'error');
     finishConversion();
     return;
   }
 
   const total = pagesToConvert.length;
-  updateProgress(0, total, 'Memulai rendering...');
+  updateProgress(0, total, 'Memulai konversi...');
 
-  for (let i = 0; i < total; i++) {
-    const pageNum = pagesToConvert[i];
-    updateProgress(i, total, `Mengonversi halaman ${pageNum} dari ${state.totalPages}...`);
-
-    try {
-      const page = await state.pdfDocument.getPage(pageNum);
-      const viewport = page.getViewport({ scale: scale });
-      
-      // Render to Offscreen Canvas
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      // Fill white background for JPG conversion
-      if (selectedFormat === 'jpg') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-
-      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-      // Convert to Data URL & Blob
-      const dataUrl = canvas.toDataURL(mimeType, quality);
-      const blob = await (await fetch(dataUrl)).blob();
-      const outputFileName = `${state.fileNameBase}_page_${pageNum}.${selectedFormat}`;
-
-      const pageObj = {
-        pageNum,
-        blob,
-        dataUrl,
-        width: Math.round(viewport.width),
-        height: Math.round(viewport.height),
-        selected: true,
-        fileName: outputFileName
-      };
-
-      state.convertedPages.push(pageObj);
-    } catch (err) {
-      console.error(`Error rendering page ${pageNum}:`, err);
-      showToast(`Gagal merender halaman ${pageNum}`, 'error');
-    }
+  if (state.inputMode === 'pdf') {
+    await convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale);
+  } else if (state.inputMode === 'images') {
+    await convertImagesMode(pagesToConvert, selectedFormat, mimeType, quality, scale);
   }
 
   updateProgress(total, total, 'Selesai!');
@@ -311,10 +316,117 @@ async function startConversion() {
     elements.resultsCard.classList.remove('hidden');
     finishConversion();
     
-    // Smooth scroll to results
     elements.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    showToast(`Berhasil mengonversi ${state.convertedPages.length} halaman!`, 'success');
+    showToast(`Berhasil mengonversi ${state.convertedPages.length} berkas!`, 'success');
   }, 400);
+}
+
+// PDF Conversion Routine
+async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale) {
+  const total = pagesToConvert.length;
+  for (let i = 0; i < total; i++) {
+    const pageNum = pagesToConvert[i];
+    updateProgress(i, total, `Mengonversi halaman ${pageNum} dari ${state.totalPages}...`);
+
+    try {
+      const page = await state.pdfDocument.getPage(pageNum);
+      const viewport = page.getViewport({ scale: scale });
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      if (selectedFormat === 'jpg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      const blob = await (await fetch(dataUrl)).blob();
+      const outputFileName = `${state.fileNameBase}_page_${pageNum}.${selectedFormat}`;
+
+      state.convertedPages.push({
+        pageNum,
+        blob,
+        dataUrl,
+        width: Math.round(viewport.width),
+        height: Math.round(viewport.height),
+        selected: true,
+        fileName: outputFileName
+      });
+    } catch (err) {
+      console.error(`Error rendering page ${pageNum}:`, err);
+      showToast(`Gagal merender halaman ${pageNum}`, 'error');
+    }
+  }
+}
+
+// Images Conversion Routine (PNG <-> JPG <-> WEBP)
+async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale) {
+  const total = indicesToConvert.length;
+  for (let i = 0; i < total; i++) {
+    const itemIndex = indicesToConvert[i] - 1; // 1-indexed to 0-indexed
+    const file = state.imageFiles[itemIndex];
+    if (!file) continue;
+
+    updateProgress(i, total, `Mengonversi gambar ${i + 1} dari ${total}...`);
+
+    try {
+      const img = await loadImageFromFile(file);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+
+      // Fill background for JPG output if source image has alpha transparency
+      if (selectedFormat === 'jpg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      const blob = await (await fetch(dataUrl)).blob();
+      
+      const cleanName = file.name.replace(/\.[^/.]+$/, '');
+      const outputFileName = `${cleanName}_converted.${selectedFormat}`;
+
+      state.convertedPages.push({
+        pageNum: itemIndex + 1,
+        blob,
+        dataUrl,
+        width: canvas.width,
+        height: canvas.height,
+        selected: true,
+        fileName: outputFileName
+      });
+    } catch (err) {
+      console.error(`Error converting image ${file.name}:`, err);
+      showToast(`Gagal mengonversi ${file.name}`, 'error');
+    }
+  }
+}
+
+// Helper: Load HTML Image from File Object
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
 }
 
 function updateProgress(current, total, statusText) {
@@ -335,21 +447,25 @@ function renderGallery() {
   elements.convertedCount.textContent = state.convertedPages.length;
   updateZipCount();
 
+  const isPdf = state.inputMode === 'pdf';
+
   state.convertedPages.forEach((item, index) => {
     const card = document.createElement('div');
     card.className = `page-card ${item.selected ? 'selected' : ''}`;
     card.dataset.index = index;
 
+    const labelText = isPdf ? `Halaman ${item.pageNum}` : `Item ${item.pageNum}`;
+
     card.innerHTML = `
       <div class="card-top-bar">
         <label class="card-checkbox-label">
           <input type="checkbox" class="page-checkbox" ${item.selected ? 'checked' : ''} data-index="${index}" />
-          <span>Halaman ${item.pageNum}</span>
+          <span>${labelText}</span>
         </label>
         <span class="badge-dim">${item.width} x ${item.height} px</span>
       </div>
       <div class="card-image-wrap" data-index="${index}">
-        <img src="${item.dataUrl}" alt="Halaman ${item.pageNum}" loading="lazy" />
+        <img src="${item.dataUrl}" alt="${item.fileName}" loading="lazy" />
         <div class="image-overlay">
           <button type="button" class="btn btn-small btn-secondary preview-btn" data-index="${index}">
             <i class="fa-solid fa-magnifying-glass-plus"></i> Perbesar
@@ -363,7 +479,6 @@ function renderGallery() {
       </div>
     `;
 
-    // Bind Event Listeners on Card
     const checkbox = card.querySelector('.page-checkbox');
     checkbox.addEventListener('change', (e) => {
       state.convertedPages[index].selected = e.target.checked;
@@ -401,7 +516,8 @@ async function downloadAsZip() {
 
   showToast('Membuat berkas ZIP...', 'info');
   const zip = new JSZip();
-  const folder = zip.folder(`${state.fileNameBase}_images`);
+  const folderName = state.fileNameBase ? `${state.fileNameBase}_converted` : 'converted_images';
+  const folder = zip.folder(folderName);
 
   selectedItems.forEach(item => {
     folder.file(item.fileName, item.blob);
@@ -412,7 +528,7 @@ async function downloadAsZip() {
   
   const link = document.createElement('a');
   link.href = zipUrl;
-  link.download = `${state.fileNameBase}_converted_images.zip`;
+  link.download = `${folderName}.zip`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -434,7 +550,7 @@ function updateModalContent() {
   const item = state.convertedPages[state.currentModalIndex];
   if (!item) return;
 
-  elements.modalTitle.textContent = `${state.fileNameBase} - Halaman ${item.pageNum} (${item.width}x${item.height}px)`;
+  elements.modalTitle.textContent = `${item.fileName} (${item.width}x${item.height}px)`;
   elements.modalImage.src = item.dataUrl;
   elements.modalDownloadLink.href = item.dataUrl;
   elements.modalDownloadLink.download = item.fileName;
