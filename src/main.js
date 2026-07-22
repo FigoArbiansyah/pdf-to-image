@@ -1,10 +1,3 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
-import JSZip from 'jszip';
-
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
 // Application State
 const state = {
   inputMode: 'none', // 'none' | 'pdf' | 'images'
@@ -17,6 +10,32 @@ const state = {
   isConverting: false,
   currentModalIndex: 0
 };
+
+// Lazy Loaded Modules Cache
+let pdfjsLibModule = null;
+let JSZipModule = null;
+
+// Lazy load PDF.js Engine
+async function getPdfJs() {
+  if (!pdfjsLibModule) {
+    const [pdfjs, workerUrl] = await Promise.all([
+      import('pdfjs-dist'),
+      import('pdfjs-dist/build/pdf.worker.mjs?url')
+    ]);
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl.default || workerUrl;
+    pdfjsLibModule = pdfjs;
+  }
+  return pdfjsLibModule;
+}
+
+// Lazy load JSZip Engine
+async function getJSZip() {
+  if (!JSZipModule) {
+    const jszipModule = await import('jszip');
+    JSZipModule = jszipModule.default || jszipModule;
+  }
+  return JSZipModule;
+}
 
 // DOM Elements
 const elements = {
@@ -197,7 +216,7 @@ function setPresetFilter(type) {
   }
 }
 
-// Load PDF Document
+// Load PDF Document (with Lazy Loaded PDF.js)
 async function loadPdfFile(file) {
   resetFileState();
   state.inputMode = 'pdf';
@@ -212,6 +231,7 @@ async function loadPdfFile(file) {
   
   try {
     showToast('Membaca dokumen PDF...', 'info');
+    const pdfjsLib = await getPdfJs();
     const arrayBuffer = await file.arrayBuffer();
     state.pdfDocument = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     state.totalPages = state.pdfDocument.numPages;
@@ -251,7 +271,7 @@ function loadImageFiles(files) {
   showToast(`Berhasil memuat ${files.length} gambar.`, 'success');
 }
 
-// Reset State
+// Reset State & Memory Cleanup
 function resetFileState() {
   state.inputMode = 'none';
   state.pdfFile = null;
@@ -318,12 +338,15 @@ async function startConversion() {
     
     elements.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     showToast(`Berhasil mengonversi ${state.convertedPages.length} berkas!`, 'success');
-  }, 400);
+  }, 300);
 }
 
 // PDF Conversion Routine
 async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale) {
   const total = pagesToConvert.length;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
   for (let i = 0; i < total; i++) {
     const pageNum = pagesToConvert[i];
     updateProgress(i, total, `Mengonversi halaman ${pageNum} dari ${state.totalPages}...`);
@@ -332,8 +355,6 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
       const page = await state.pdfDocument.getPage(pageNum);
       const viewport = page.getViewport({ scale: scale });
       
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
 
@@ -367,8 +388,11 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
 // Images Conversion Routine (PNG <-> JPG <-> WEBP)
 async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale) {
   const total = indicesToConvert.length;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
   for (let i = 0; i < total; i++) {
-    const itemIndex = indicesToConvert[i] - 1; // 1-indexed to 0-indexed
+    const itemIndex = indicesToConvert[i] - 1;
     const file = state.imageFiles[itemIndex];
     if (!file) continue;
 
@@ -376,13 +400,9 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
 
     try {
       const img = await loadImageFromFile(file);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
       canvas.width = Math.round(img.naturalWidth * scale);
       canvas.height = Math.round(img.naturalHeight * scale);
 
-      // Fill background for JPG output if source image has alpha transparency
       if (selectedFormat === 'jpg') {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -412,7 +432,7 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
   }
 }
 
-// Helper: Load HTML Image from File Object
+// Helper: Load HTML Image from File Object with memory cleanup
 function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -506,7 +526,7 @@ function updateZipCount() {
   elements.downloadZipBtn.disabled = selectedCount === 0;
 }
 
-// Download Selected Images as ZIP
+// Download Selected Images as ZIP (with Lazy Loaded JSZip)
 async function downloadAsZip() {
   const selectedItems = state.convertedPages.filter(p => p.selected);
   if (selectedItems.length === 0) {
@@ -515,6 +535,7 @@ async function downloadAsZip() {
   }
 
   showToast('Membuat berkas ZIP...', 'info');
+  const JSZip = await getJSZip();
   const zip = new JSZip();
   const folderName = state.fileNameBase ? `${state.fileNameBase}_converted` : 'converted_images';
   const folder = zip.folder(folderName);
