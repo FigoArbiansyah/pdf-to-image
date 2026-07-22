@@ -988,6 +988,11 @@ body {
   line-height: 1.5;
 }
 
+/* Utilities */
+.hidden {
+  display: none !important;
+}
+
 .app-footer {
   text-align: center;
   font-size: 0.82rem;
