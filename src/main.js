@@ -179,6 +179,13 @@ function handleFileSelect(e) {
 
 // Process Uploaded Files (PDF vs Images)
 function processInputFiles(files) {
+  // Check for 0-byte empty files
+  const emptyFiles = files.filter(f => f.size === 0);
+  if (emptyFiles.length > 0) {
+    showToast('Terdapat berkas kosong (0 Bytes) yang tidak dapat diproses.', 'error');
+    return;
+  }
+
   const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
   const imageFiles = files.filter(f => f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
 
@@ -644,8 +651,15 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   
-  const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info');
-  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+  const iconName = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info');
+  const icon = document.createElement('i');
+  icon.className = `fa-solid ${iconName}`;
+  
+  const span = document.createElement('span');
+  span.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(span);
 
   elements.toastContainer.appendChild(toast);
   

@@ -10,8 +10,9 @@
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#09090b" />
   
-  <!-- Canonical Tag -->
+  <!-- Canonical & Manifest Tags -->
   <link rel="canonical" href="https://pdftoimage.studio/" />
+  <link rel="manifest" href="/manifest.webmanifest" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23121215'/><path d='M30 25h25l15 15v35H30z' fill='%23ef4444'/><path d='M40 50h20v20H40z' fill='%233b82f6'/></svg>" />
@@ -98,12 +99,12 @@
 <body>
   <div class="container">
     <!-- Header -->
-    <header class="app-header">
+    <header class="app-header" role="banner">
       <div class="brand">
         <div class="brand-logo">
-          <i class="fa-solid fa-file-pdf pdf-icon"></i>
-          <i class="fa-solid fa-arrow-right-long brand-arrow"></i>
-          <i class="fa-solid fa-file-image img-icon"></i>
+          <i class="fa-solid fa-file-pdf pdf-icon" aria-hidden="true"></i>
+          <i class="fa-solid fa-arrow-right-long brand-arrow" aria-hidden="true"></i>
+          <i class="fa-solid fa-file-image img-icon" aria-hidden="true"></i>
         </div>
         <div class="brand-text">
           <div class="brand-title-group">
@@ -114,70 +115,70 @@
         </div>
       </div>
       <div class="header-right">
-        <div class="privacy-badge">
-          <span class="pulse-dot"></span>
-          <i class="fa-solid fa-shield-halved"></i>
+        <div class="privacy-badge" role="status">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
           <span>100% Privasi Terjaga</span>
         </div>
       </div>
     </header>
 
-    <main class="app-main">
+    <main class="app-main" role="main">
       <!-- Upload Section -->
-      <section class="card upload-card" id="drop-zone">
-        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden />
+      <section class="card upload-card" id="drop-zone" role="region" aria-label="Area Pengunggahan Berkas">
+        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" />
         <div class="upload-content" id="upload-prompt">
           <div class="upload-icon-wrapper">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <i class="fa-solid fa-cloud-arrow-up upload-icon" aria-hidden="true"></i>
           </div>
           <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
-          <p>atau <button type="button" class="btn btn-outline" id="browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas (PDF / Gambar)</button></p>
+          <p>atau <button type="button" class="btn btn-outline" id="browse-btn" aria-label="Jelajahi dan pilih berkas"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Berkas (PDF / Gambar)</button></p>
           <span class="file-hint">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban</span>
         </div>
 
         <!-- Selected File Info State -->
-        <div class="file-info-bar hidden" id="file-info">
+        <div class="file-info-bar hidden" id="file-info" role="status" aria-live="polite">
           <div class="file-details">
             <div class="file-icon-box" id="file-icon-box">
-              <i class="fa-solid fa-file-pdf" id="file-type-icon"></i>
+              <i class="fa-solid fa-file-pdf" id="file-type-icon" aria-hidden="true"></i>
             </div>
             <div class="file-text">
               <h4 id="file-name">document.pdf</h4>
               <p><span id="file-size">0 MB</span> &bull; <span id="file-pages">0 Halaman</span></p>
             </div>
           </div>
-          <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File">
-            <i class="fa-solid fa-rotate-left"></i> <span>Ganti Berkas</span>
+          <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File" aria-label="Ganti Berkas Terpilih">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span>Ganti Berkas</span>
           </button>
         </div>
       </section>
 
       <!-- Settings Panel (Enabled when PDF/Image is loaded) -->
-      <section class="card settings-card disabled" id="settings-panel">
-        <h3 class="section-title"><i class="fa-solid fa-sliders"></i> Pengaturan Konversi</h3>
+      <section class="card settings-card disabled" id="settings-panel" aria-label="Pengaturan Konversi">
+        <h3 class="section-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Konversi</h3>
         
         <div class="settings-grid">
           <!-- Format Picker -->
           <div class="setting-group">
             <label class="setting-label">Format Gambar Target</label>
-            <div class="format-toggle">
+            <div class="format-toggle" role="radiogroup" aria-label="Pilih format gambar target">
               <input type="radio" name="format" id="fmt-png" value="png" checked />
               <label for="fmt-png" class="format-btn">
-                <i class="fa-solid fa-file-image"></i>
+                <i class="fa-solid fa-file-image" aria-hidden="true"></i>
                 <span class="fmt-title">PNG</span>
                 <span class="fmt-desc">Lossless</span>
               </label>
 
               <input type="radio" name="format" id="fmt-jpg" value="jpg" />
               <label for="fmt-jpg" class="format-btn">
-                <i class="fa-solid fa-image"></i>
+                <i class="fa-solid fa-image" aria-hidden="true"></i>
                 <span class="fmt-title">JPG</span>
                 <span class="fmt-desc">Kompresi Ringkas</span>
               </label>
 
               <input type="radio" name="format" id="fmt-webp" value="webp" />
               <label for="fmt-webp" class="format-btn">
-                <i class="fa-solid fa-file-code"></i>
+                <i class="fa-solid fa-file-code" aria-hidden="true"></i>
                 <span class="fmt-title">WEBP</span>
                 <span class="fmt-desc">Web Modern</span>
               </label>
@@ -190,7 +191,7 @@
               <label class="setting-label" for="jpg-quality" id="quality-label">Kualitas Kompresi</label>
               <span class="val-badge" id="quality-val">90%</span>
             </div>
-            <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" />
+            <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" aria-label="Kualitas Kompresi Gambar" />
             <div class="slider-labels">
               <span>Ukuran Kecil</span>
               <span>Kualitas Tinggi</span>
@@ -201,13 +202,13 @@
           <div class="setting-group">
             <label class="setting-label" for="scale-select">Resolusi / DPI Output</label>
             <div class="select-wrapper">
-              <select id="scale-select" class="custom-select">
+              <select id="scale-select" class="custom-select" aria-label="Resolusi atau DPI Gambar Output">
                 <option value="1">1x Standard (72 DPI)</option>
                 <option value="1.5">1.5x Medium (108 DPI)</option>
                 <option value="2" selected>2x High Quality / HD (144 DPI - Direkomendasikan)</option>
                 <option value="3">3x Ultra HD (216 DPI - Tajam)</option>
               </select>
-              <i class="fa-solid fa-chevron-down select-icon"></i>
+              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
             </div>
           </div>
 
@@ -215,9 +216,9 @@
           <div class="setting-group">
             <label class="setting-label" for="page-range-input">Halaman yang Dikonversi</label>
             <div class="range-input-box">
-              <input type="text" id="page-range-input" class="custom-input" placeholder="Contoh: 1-5, 8, 11 (Kosongkan untuk semua)" />
+              <input type="text" id="page-range-input" class="custom-input" placeholder="Contoh: 1-5, 8, 11 (Kosongkan untuk semua)" aria-label="Rentang halaman yang dikonversi" />
             </div>
-            <div class="preset-buttons">
+            <div class="preset-buttons" role="group" aria-label="Pintasan pilihan halaman">
               <button type="button" class="btn btn-preset active" id="preset-all-btn">Semua</button>
               <button type="button" class="btn btn-preset" id="preset-odd-btn">Halaman Ganjil</button>
               <button type="button" class="btn btn-preset" id="preset-even-btn">Halaman Genap</button>
@@ -227,16 +228,16 @@
 
         <!-- Action Button -->
         <div class="action-bar">
-          <button type="button" class="btn btn-primary btn-large" id="convert-btn">
-            <i class="fa-solid fa-bolt"></i> Konversi Ke Gambar Sekarang
+          <button type="button" class="btn btn-primary btn-large" id="convert-btn" aria-label="Mulai proses konversi">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i> Konversi Ke Gambar Sekarang
           </button>
         </div>
       </section>
 
       <!-- Progress Section -->
-      <section class="card progress-card hidden" id="progress-card">
+      <section class="card progress-card hidden" id="progress-card" role="status" aria-live="polite">
         <div class="progress-header">
-          <span class="progress-title" id="progress-status"><i class="fa-solid fa-spinner fa-spin"></i> Memproses halaman PDF...</span>
+          <span class="progress-title" id="progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Memproses halaman PDF...</span>
           <span class="progress-percent" id="progress-percent">0%</span>
         </div>
         <div class="progress-bar-track">
@@ -245,18 +246,18 @@
       </section>
 
       <!-- Results Gallery -->
-      <section class="card results-card hidden" id="results-card">
+      <section class="card results-card hidden" id="results-card" aria-label="Hasil Konversi">
         <div class="results-header">
           <div class="results-title-group">
-            <h3><i class="fa-solid fa-images"></i> Hasil Konversi (<span id="converted-count">0</span> Gambar)</h3>
+            <h3><i class="fa-solid fa-images" aria-hidden="true"></i> Hasil Konversi (<span id="converted-count">0</span> Gambar)</h3>
             <div class="selection-actions">
-              <button type="button" class="btn-text" id="select-all-btn"><i class="fa-regular fa-square-check"></i> Pilih Semua</button>
-              <button type="button" class="btn-text" id="deselect-all-btn"><i class="fa-regular fa-square"></i> Hapus Pilihan</button>
+              <button type="button" class="btn-text" id="select-all-btn"><i class="fa-regular fa-square-check" aria-hidden="true"></i> Pilih Semua</button>
+              <button type="button" class="btn-text" id="deselect-all-btn"><i class="fa-regular fa-square" aria-hidden="true"></i> Hapus Pilihan</button>
             </div>
           </div>
 
-          <button type="button" class="btn btn-success" id="download-zip-btn">
-            <i class="fa-solid fa-file-zipper"></i> Unduh ZIP (<span id="zip-count">0</span>)
+          <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
+            <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
           </button>
         </div>
 
@@ -266,19 +267,19 @@
       </section>
 
       <!-- FAQ Section for SEO & User Guidance -->
-      <section class="card faq-section" id="faq">
-        <h3 class="section-title"><i class="fa-solid fa-circle-question"></i> Pertanyaan Umum (FAQ)</h3>
+      <section class="card faq-section" id="faq" aria-label="Pertanyaan Umum">
+        <h3 class="section-title"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Pertanyaan Umum (FAQ)</h3>
         <div class="faq-grid">
           <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-shield-halved"></i> Apakah berkas PDF &amp; gambar saya aman?</h4>
+            <h4 class="faq-question"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Apakah berkas PDF &amp; gambar saya aman?</h4>
             <p class="faq-answer">100% Aman dan terjamin. Semua proses konversi diproses sepenuhnya di dalam peramban (*browser*) Anda secara lokal. Berkas Anda tidak pernah diunggah ke server manapun.</p>
           </article>
           <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-file-export"></i> Format apa saja yang didukung?</h4>
+            <h4 class="faq-question"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Format apa saja yang didukung?</h4>
             <p class="faq-answer">Anda dapat mengonversi PDF ke PNG, JPG, atau WEBP resolusi tinggi (hingga 3x Ultra HD 216 DPI), serta mengonversi antar format gambar (seperti PNG ke JPG, JPG ke PNG, WEBP, dll).</p>
           </article>
           <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-infinity"></i> Apakah ada batasan jumlah atau ukuran file?</h4>
+            <h4 class="faq-question"><i class="fa-solid fa-infinity" aria-hidden="true"></i> Apakah ada batasan jumlah atau ukuran file?</h4>
             <p class="faq-answer">Tidak ada batasan jumlah halaman maupun ukuran berkas. Semua fitur 100% gratis digunakan kapan saja tanpa perlu registrasi.</p>
           </article>
         </div>
@@ -286,37 +287,37 @@
     </main>
 
     <!-- Footer -->
-    <footer class="app-footer">
+    <footer class="app-footer" role="contentinfo">
       <p>&copy; 2026 PDF to Image Studio &bull; Minimalist &amp; High-Performance Browser Converter</p>
     </footer>
   </div>
 
   <!-- Fullscreen Image Modal -->
-  <div class="modal hidden" id="preview-modal">
+  <div class="modal hidden" id="preview-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-backdrop" id="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
         <h4 id="modal-title">Pratinjau Halaman</h4>
         <div class="modal-nav-btns">
-          <button type="button" class="btn btn-small btn-secondary" id="modal-prev-btn" title="Halaman Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+          <button type="button" class="btn btn-small btn-secondary" id="modal-prev-btn" title="Halaman Sebelumnya" aria-label="Gambar Sebelumnya"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
           <span id="modal-page-num" class="modal-page-indicator">1 / 1</span>
-          <button type="button" class="btn btn-small btn-secondary" id="modal-next-btn" title="Halaman Selanjutnya"><i class="fa-solid fa-chevron-right"></i></button>
-          <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+          <button type="button" class="btn btn-small btn-secondary" id="modal-next-btn" title="Halaman Selanjutnya" aria-label="Gambar Selanjutnya"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+          <button class="modal-close" id="modal-close" aria-label="Tutup Pratinjau"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
       </div>
       <div class="modal-body">
         <img id="modal-image" src="" alt="Pratinjau HD" />
       </div>
       <div class="modal-footer">
-        <a id="modal-download-link" class="btn btn-primary" download>
-          <i class="fa-solid fa-download"></i> Unduh Gambar Ini
+        <a id="modal-download-link" class="btn btn-primary" download aria-label="Unduh gambar ini">
+          <i class="fa-solid fa-download" aria-hidden="true"></i> Unduh Gambar Ini
         </a>
       </div>
     </div>
   </div>
 
   <!-- Toast Notification Container -->
-  <div id="toast-container" class="toast-container"></div>
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
 
   <!-- JavaScript App Entry point -->
   <script type="module" src="/src/main.js"></script>
