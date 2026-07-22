@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "jszip": "^3.10.1",
     "pdfjs-dist": "^4.0.379"
   },

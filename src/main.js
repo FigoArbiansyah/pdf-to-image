@@ -1,3 +1,8 @@
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics tracking
+inject();
+
 // Application State
 const state = {
   inputMode: 'none', // 'none' | 'pdf' | 'images'
