@@ -210,6 +210,12 @@ function processInputFiles(files) {
     return;
   }
 
+  // Check for large files (> 100 MB)
+  const totalSizeBytes = files.reduce((acc, f) => acc + f.size, 0);
+  if (totalSizeBytes > 100 * 1024 * 1024) {
+    showToast('Berkas terdeteksi cukup besar (>100 MB). Proses konversi mungkin membutuhkan memori & waktu lebih.', 'info');
+  }
+
   const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
   const imageFiles = files.filter(f => f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
 
@@ -372,6 +378,11 @@ async function startConversion() {
   }, 300);
 }
 
+// Helper: Yield execution to main thread to unblock UI animations & rendering
+function yieldToMainThread(ms = 10) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // PDF Conversion Routine
 async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale) {
   const total = pagesToConvert.length;
@@ -381,6 +392,7 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
   for (let i = 0; i < total; i++) {
     const pageNum = pagesToConvert[i];
     updateProgress(i, total, `Mengonversi halaman ${pageNum} dari ${state.totalPages}...`);
+    await yieldToMainThread(10);
 
     try {
       const page = await state.pdfDocument.getPage(pageNum);
@@ -428,6 +440,7 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
     if (!file) continue;
 
     updateProgress(i, total, `Mengonversi gambar ${i + 1} dari ${total}...`);
+    await yieldToMainThread(10);
 
     try {
       const img = await loadImageFromFile(file);
