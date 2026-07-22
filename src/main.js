@@ -163,9 +163,33 @@ function init() {
   document.addEventListener('keydown', (e) => {
     if (elements.previewModal.classList.contains('hidden')) return;
 
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      return;
+    }
     if (e.key === 'ArrowLeft') showPrevModalImage();
     if (e.key === 'ArrowRight') showNextModalImage();
+
+    // Modal Focus Trap
+    if (e.key === 'Tab') {
+      const focusables = Array.from(elements.previewModal.querySelectorAll('button:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    }
   });
 }
 
@@ -566,12 +590,19 @@ async function downloadAsZip() {
 }
 
 // Lightbox Modal Functions & Navigation
+let lastFocusedElement = null;
+
 function openModal(index) {
   if (index < 0 || index >= state.convertedPages.length) return;
 
+  lastFocusedElement = document.activeElement;
   state.currentModalIndex = index;
   updateModalContent();
   elements.previewModal.classList.remove('hidden');
+  
+  setTimeout(() => {
+    elements.modalClose.focus();
+  }, 50);
 }
 
 function updateModalContent() {
@@ -605,6 +636,11 @@ function showNextModalImage() {
 function closeModal() {
   elements.previewModal.classList.add('hidden');
   elements.modalImage.src = '';
+  
+  if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+    lastFocusedElement.focus();
+    lastFocusedElement = null;
+  }
 }
 
 // Helper: Page Range Parser (e.g., "1-3, 5, 8")

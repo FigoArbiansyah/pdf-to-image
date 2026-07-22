@@ -97,6 +97,9 @@
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
+  <!-- Skip Navigation Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Lompati ke Konten Utama</a>
+
   <div class="container">
     <!-- Header -->
     <header class="app-header" role="banner">
@@ -123,17 +126,17 @@
       </div>
     </header>
 
-    <main class="app-main" role="main">
+    <main class="app-main" id="main-content" role="main" tabindex="-1">
       <!-- Upload Section -->
       <section class="card upload-card" id="drop-zone" role="region" aria-label="Area Pengunggahan Berkas">
-        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" />
+        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" aria-describedby="file-hint-text" />
         <div class="upload-content" id="upload-prompt">
           <div class="upload-icon-wrapper">
             <i class="fa-solid fa-cloud-arrow-up upload-icon" aria-hidden="true"></i>
           </div>
           <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
           <p>atau <button type="button" class="btn btn-outline" id="browse-btn" aria-label="Jelajahi dan pilih berkas"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Berkas (PDF / Gambar)</button></p>
-          <span class="file-hint">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban</span>
+          <span class="file-hint" id="file-hint-text">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban</span>
         </div>
 
         <!-- Selected File Info State -->
