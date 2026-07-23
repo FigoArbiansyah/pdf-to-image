@@ -14,7 +14,8 @@
   <link rel="canonical" href="https://doc-shot.vercel.app/" />
   <link rel="manifest" href="/manifest.webmanifest" />
 
-  <!-- Favicon & Touch Icons -->
+  <!-- Image Preloading & Favicons -->
+  <link rel="preload" as="image" href="/icon.png" fetchpriority="high" type="image/png" />
   <link rel="icon" type="image/png" href="/icon.png" />
   <link rel="apple-touch-icon" href="/icon.png" />
 
@@ -52,6 +53,28 @@
           "price": "0",
           "priceCurrency": "USD"
         }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://doc-shot.vercel.app/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Apakah dokumen PDF &amp; gambar saya aman?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "100% Aman dan terjamin. Semua proses konversi, penggabungan, pemisahan, watermark, dan OCR diproses sepenuhnya di dalam peramban Anda secara lokal menggunakan memori perangkat tanpa pernah diunggah ke server."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Fitur apa saja yang tersedia di DocPressShot Studio?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "DocPressShot Studio menyediakan 5 alat utama: Konversi PDF/Gambar ke PNG/JPG/WEBP, Gabung PDF (Merger), Pisah &amp; Hapus Halaman PDF (Splitter), Watermark PDF, dan Ekstraksi Teks OCR lokal."
+            }
+          }
+        ]
       }
     ]
   }
@@ -80,7 +103,7 @@
       <div class="brand">
         <div class="brand-logo-container">
           <div class="brand-logo">
-            <img src="/icon.png" alt="DocPressShot Studio" class="brand-logo-img" />
+            <img src="/icon.png" alt="DocPressShot Studio Logo" width="58" height="58" class="brand-logo-img" />
           </div>
           <span class="logo-glow-effect"></span>
         </div>
