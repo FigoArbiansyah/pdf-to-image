@@ -206,10 +206,36 @@
             <label class="setting-label" for="scale-select">Resolusi / DPI Output</label>
             <div class="select-wrapper">
               <select id="scale-select" class="custom-select" aria-label="Resolusi atau DPI Gambar Output">
-                <option value="1">1x Standard (72 DPI)</option>
+                <option value="1">1x Standard (72 DPI - Cepat)</option>
                 <option value="1.5">1.5x Medium (108 DPI)</option>
                 <option value="2" selected>2x High Quality / HD (144 DPI - Direkomendasikan)</option>
-                <option value="3">3x Ultra HD (216 DPI - Tajam)</option>
+                <option value="3">3x Ultra HD (216 DPI - Tajam / Cetak)</option>
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <!-- Canvas Background Filler -->
+          <div class="setting-group">
+            <label class="setting-label" for="bg-fill-select">Latar Belakang Canvas</label>
+            <div class="select-wrapper">
+              <select id="bg-fill-select" class="custom-select" aria-label="Warna latar belakang gambar output">
+                <option value="white" selected>Putih Clean (Default)</option>
+                <option value="transparent">Transparan (PNG/WEBP)</option>
+                <option value="black">Hitam Dark</option>
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <!-- Image Color Mode -->
+          <div class="setting-group">
+            <label class="setting-label" for="color-mode-select">Mode Warna Gambar</label>
+            <div class="select-wrapper">
+              <select id="color-mode-select" class="custom-select" aria-label="Mode warna gambar hasil">
+                <option value="color" selected>Full Color (Asli)</option>
+                <option value="grayscale">Grayscale / Hitam-Putih Halus</option>
+                <option value="monochrome">Monokrom Teks Kontras Tinggi</option>
               </select>
               <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
             </div>
@@ -223,6 +249,7 @@
             </div>
             <div class="preset-buttons" role="group" aria-label="Pintasan pilihan halaman">
               <button type="button" class="btn btn-preset active" id="preset-all-btn">Semua</button>
+              <button type="button" class="btn btn-preset" id="preset-first5-btn">5 Hal Pertama</button>
               <button type="button" class="btn btn-preset" id="preset-odd-btn">Halaman Ganjil</button>
               <button type="button" class="btn btn-preset" id="preset-even-btn">Halaman Genap</button>
             </div>
@@ -259,9 +286,15 @@
             </div>
           </div>
 
-          <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
-            <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
-          </button>
+          <div class="results-toolbar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+              <input type="text" id="gallery-search" class="custom-input custom-input-small" placeholder="Cari halaman..." aria-label="Cari gambar hasil konversi" />
+            </div>
+            <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
+              <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
+            </button>
+          </div>
         </div>
 
         <div class="gallery-grid" id="gallery-grid">
@@ -269,52 +302,104 @@
         </div>
       </section>
 
-      <!-- FAQ Section for SEO & User Guidance -->
+      <!-- FAQ Accordion Section for SEO & User Guidance -->
       <section class="card faq-section" id="faq" aria-label="Pertanyaan Umum">
         <h3 class="section-title"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Pertanyaan Umum (FAQ)</h3>
-        <div class="faq-grid">
-          <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Apakah berkas PDF &amp; gambar saya aman?</h4>
-            <p class="faq-answer">100% Aman dan terjamin. Semua proses konversi diproses sepenuhnya di dalam peramban (*browser*) Anda secara lokal. Berkas Anda tidak pernah diunggah ke server manapun.</p>
-          </article>
-          <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-file-export" aria-hidden="true"></i> Format apa saja yang didukung?</h4>
-            <p class="faq-answer">Anda dapat mengonversi PDF ke PNG, JPG, atau WEBP resolusi tinggi (hingga 3x Ultra HD 216 DPI), serta mengonversi antar format gambar (seperti PNG ke JPG, JPG ke PNG, WEBP, dll).</p>
-          </article>
-          <article class="faq-item">
-            <h4 class="faq-question"><i class="fa-solid fa-infinity" aria-hidden="true"></i> Apakah ada batasan jumlah atau ukuran file?</h4>
-            <p class="faq-answer">Tidak ada batasan jumlah halaman maupun ukuran berkas. Semua fitur 100% gratis digunakan kapan saja tanpa perlu registrasi.</p>
-          </article>
+        <div class="faq-accordion-list">
+          <details class="faq-accordion-item" open>
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Apakah berkas PDF &amp; gambar saya aman?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>100% Aman dan terjamin. Semua proses konversi diproses sepenuhnya di dalam peramban (*browser*) Anda secara lokal menggunakan memori perangkat. Berkas dokumen Anda tidak pernah diunggah atau dikirim ke server manapun.</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-file-export" aria-hidden="true"></i> Format apa saja yang didukung?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Anda dapat mengonversi PDF ke PNG (Lossless &amp; transparan), JPG (Kompresi ringkas), atau WEBP (Format modern web), serta mengonversi antar-format gambar (seperti PNG ke JPG, JPG ke PNG, WEBP, dll) dengan pilihan DPI hingga 3x Ultra HD (216 DPI).</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-infinity" aria-hidden="true"></i> Apakah ada batasan jumlah atau ukuran file?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Tidak ada batasan jumlah halaman maupun ukuran berkas karena pemrosesan berjalan langsung di peramban Anda. Semua fitur 100% gratis tanpa pendaftaran atau watermark.</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Fitur penyuntingan gambar apa yang tersedia?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Anda dapat mengatur latar belakang canvas (Putih, Transparan, Hitam), mengubah mode warna ke Grayscale/Monokrom, memutar (rotate) gambar 90 derajat, memperbesar/memperkecil dengan kontrol Zoom, serta menyalin gambar langsung ke clipboard tanpa mengunduhnya.</p>
+            </div>
+          </details>
         </div>
       </section>
     </main>
 
     <!-- Footer -->
     <footer class="app-footer" role="contentinfo">
-      <p>&copy; 2026 PDF to Image Studio &bull; Minimalist &amp; High-Performance Browser Converter</p>
+      <p>&copy; 2026 PDF to Image Studio &bull; Modern Glassmorphism &amp; High-Performance Browser Converter</p>
     </footer>
   </div>
 
-  <!-- Fullscreen Image Modal -->
+  <!-- Fullscreen Image Lightbox Modal -->
   <div class="modal hidden" id="preview-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-backdrop" id="modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h4 id="modal-title">Pratinjau Halaman</h4>
-        <div class="modal-nav-btns">
-          <button type="button" class="btn btn-small btn-secondary" id="modal-prev-btn" title="Halaman Sebelumnya" aria-label="Gambar Sebelumnya"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+        <div class="modal-title-group">
+          <h4 id="modal-title">Pratinjau Halaman</h4>
           <span id="modal-page-num" class="modal-page-indicator">1 / 1</span>
-          <button type="button" class="btn btn-small btn-secondary" id="modal-next-btn" title="Halaman Selanjutnya" aria-label="Gambar Selanjutnya"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
-          <button class="modal-close" id="modal-close" aria-label="Tutup Pratinjau"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="modal-toolbar">
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-out" title="Perkecil (Zoom Out)" aria-label="Perkecil"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-reset" title="Reset Zoom" aria-label="Reset Zoom"><span class="zoom-val-text" id="modal-zoom-val">100%</span></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-in" title="Perbesar (Zoom In)" aria-label="Perbesar"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+          
+          <div class="toolbar-divider"></div>
+          
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-rotate-left" title="Putar Kiri 90°" aria-label="Putar Kiri"><i class="fa-solid fa-rotate-left"></i></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-rotate-right" title="Putar Kanan 90°" aria-label="Putar Kanan"><i class="fa-solid fa-rotate-right"></i></button>
+          
+          <div class="toolbar-divider"></div>
+
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-copy-btn" title="Salin ke Clipboard" aria-label="Salin Gambar"><i class="fa-solid fa-copy"></i></button>
+          <a id="modal-download-link" class="btn btn-primary btn-icon" download title="Unduh Gambar Ini" aria-label="Unduh gambar ini">
+            <i class="fa-solid fa-download" aria-hidden="true"></i>
+          </a>
+
+          <div class="toolbar-divider"></div>
+
+          <div class="modal-nav-btns">
+            <button type="button" class="btn btn-icon btn-secondary" id="modal-prev-btn" title="Gambar Sebelumnya" aria-label="Gambar Sebelumnya"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-icon btn-secondary" id="modal-next-btn" title="Gambar Selanjutnya" aria-label="Gambar Selanjutnya"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+            <button class="modal-close" id="modal-close" aria-label="Tutup Pratinjau"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+          </div>
         </div>
       </div>
-      <div class="modal-body">
-        <img id="modal-image" src="" alt="Pratinjau HD" />
+
+      <div class="modal-body" id="modal-body">
+        <div class="modal-image-viewport" id="modal-viewport">
+          <img id="modal-image" src="" alt="Pratinjau HD" />
+        </div>
       </div>
+
       <div class="modal-footer">
-        <a id="modal-download-link" class="btn btn-primary" download aria-label="Unduh gambar ini">
-          <i class="fa-solid fa-download" aria-hidden="true"></i> Unduh Gambar Ini
-        </a>
+        <span class="modal-shortcut-tip"><i class="fa-solid fa-keyboard"></i> Navigasi: <kbd>←</kbd> <kbd>→</kbd> Pindah | <kbd>+</kbd> <kbd>-</kbd> Zoom | <kbd>Esc</kbd> Tutup</span>
       </div>
     </div>
   </div>

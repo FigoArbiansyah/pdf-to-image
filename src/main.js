@@ -13,7 +13,10 @@ const state = {
   totalPages: 0,
   convertedPages: [], // Array of { pageNum, blob, dataUrl, width, height, selected, fileName }
   isConverting: false,
-  currentModalIndex: 0
+  currentModalIndex: 0,
+  modalZoom: 1.0,
+  modalRotation: 0,
+  galleryFilterQuery: ''
 };
 
 // Lazy Loaded Modules Cache
@@ -62,8 +65,11 @@ const elements = {
   jpgQualitySlider: document.getElementById('jpg-quality'),
   qualityVal: document.getElementById('quality-val'),
   scaleSelect: document.getElementById('scale-select'),
+  bgFillSelect: document.getElementById('bg-fill-select'),
+  colorModeSelect: document.getElementById('color-mode-select'),
   pageRangeInput: document.getElementById('page-range-input'),
   presetAllBtn: document.getElementById('preset-all-btn'),
+  presetFirst5Btn: document.getElementById('preset-first5-btn'),
   presetOddBtn: document.getElementById('preset-odd-btn'),
   presetEvenBtn: document.getElementById('preset-even-btn'),
   convertBtn: document.getElementById('convert-btn'),
@@ -79,6 +85,7 @@ const elements = {
   deselectAllBtn: document.getElementById('deselect-all-btn'),
   downloadZipBtn: document.getElementById('download-zip-btn'),
   zipCount: document.getElementById('zip-count'),
+  gallerySearch: document.getElementById('gallery-search'),
   galleryGrid: document.getElementById('gallery-grid'),
   
   previewModal: document.getElementById('preview-modal'),
@@ -86,15 +93,24 @@ const elements = {
   modalClose: document.getElementById('modal-close'),
   modalTitle: document.getElementById('modal-title'),
   modalImage: document.getElementById('modal-image'),
+  modalViewport: document.getElementById('modal-viewport'),
   modalDownloadLink: document.getElementById('modal-download-link'),
   modalPrevBtn: document.getElementById('modal-prev-btn'),
   modalNextBtn: document.getElementById('modal-next-btn'),
   modalPageNum: document.getElementById('modal-page-num'),
+
+  modalZoomIn: document.getElementById('modal-zoom-in'),
+  modalZoomOut: document.getElementById('modal-zoom-out'),
+  modalZoomReset: document.getElementById('modal-zoom-reset'),
+  modalZoomVal: document.getElementById('modal-zoom-val'),
+  modalRotateLeft: document.getElementById('modal-rotate-left'),
+  modalRotateRight: document.getElementById('modal-rotate-right'),
+  modalCopyBtn: document.getElementById('modal-copy-btn'),
   
   toastContainer: document.getElementById('toast-container')
 };
 
-// Initialize Event Listeners
+// Initialize App
 function init() {
   // File Upload Handlers
   elements.browseBtn.addEventListener('click', () => elements.pdfInput.click());
@@ -146,6 +162,9 @@ function init() {
 
   // Preset Handlers
   elements.presetAllBtn.addEventListener('click', () => setPresetFilter('all'));
+  if (elements.presetFirst5Btn) {
+    elements.presetFirst5Btn.addEventListener('click', () => setPresetFilter('first5'));
+  }
   elements.presetOddBtn.addEventListener('click', () => setPresetFilter('odd'));
   elements.presetEvenBtn.addEventListener('click', () => setPresetFilter('even'));
   
@@ -159,43 +178,65 @@ function init() {
   elements.deselectAllBtn.addEventListener('click', () => toggleAllSelections(false));
   elements.downloadZipBtn.addEventListener('click', downloadAsZip);
 
-  // Modal Handlers & Navigation
+  // Gallery Search Handler
+  if (elements.gallerySearch) {
+    elements.gallerySearch.addEventListener('input', (e) => {
+      state.galleryFilterQuery = e.target.value.toLowerCase().trim();
+      renderGallery();
+    });
+  }
+
+  // Lightbox Modal Navigation & Tools
   elements.modalClose.addEventListener('click', closeModal);
   elements.modalBackdrop.addEventListener('click', closeModal);
   elements.modalPrevBtn.addEventListener('click', showPrevModalImage);
   elements.modalNextBtn.addEventListener('click', showNextModalImage);
 
-  document.addEventListener('keydown', (e) => {
-    if (elements.previewModal.classList.contains('hidden')) return;
+  if (elements.modalZoomIn) {
+    elements.modalZoomIn.addEventListener('click', () => zoomModal(0.2));
+    elements.modalZoomOut.addEventListener('click', () => zoomModal(-0.2));
+    elements.modalZoomReset.addEventListener('click', () => resetModalZoom());
+    elements.modalRotateLeft.addEventListener('click', () => rotateModalImage(-90));
+    elements.modalRotateRight.addEventListener('click', () => rotateModalImage(90));
+    elements.modalCopyBtn.addEventListener('click', copyCurrentModalToClipboard);
+  }
 
-    if (e.key === 'Escape') {
-      closeModal();
-      return;
-    }
-    if (e.key === 'ArrowLeft') showPrevModalImage();
-    if (e.key === 'ArrowRight') showNextModalImage();
+  document.addEventListener('keydown', handleGlobalKeydown);
+}
 
-    // Modal Focus Trap
-    if (e.key === 'Tab') {
-      const focusables = Array.from(elements.previewModal.querySelectorAll('button:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"])'));
-      if (focusables.length === 0) return;
+// Keyboard Navigation & Shortcuts
+function handleGlobalKeydown(e) {
+  if (elements.previewModal.classList.contains('hidden')) return;
 
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
+  if (e.key === 'Escape') {
+    closeModal();
+    return;
+  }
+  if (e.key === 'ArrowLeft') showPrevModalImage();
+  if (e.key === 'ArrowRight') showNextModalImage();
+  if (e.key === '+' || e.key === '=') zoomModal(0.2);
+  if (e.key === '-' || e.key === '_') zoomModal(-0.2);
 
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          last.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === last) {
-          first.focus();
-          e.preventDefault();
-        }
+  // Modal Focus Trap
+  if (e.key === 'Tab') {
+    const focusables = Array.from(elements.previewModal.querySelectorAll('button:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        last.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === last) {
+        first.focus();
+        e.preventDefault();
       }
     }
-  });
+  }
 }
 
 // File Selection Handler
@@ -208,14 +249,12 @@ function handleFileSelect(e) {
 
 // Process Uploaded Files (PDF vs Images)
 function processInputFiles(files) {
-  // Check for 0-byte empty files
   const emptyFiles = files.filter(f => f.size === 0);
   if (emptyFiles.length > 0) {
     showToast('Terdapat berkas kosong (0 Bytes) yang tidak dapat diproses.', 'error');
     return;
   }
 
-  // Check for large files (> 100 MB)
   const totalSizeBytes = files.reduce((acc, f) => acc + f.size, 0);
   if (totalSizeBytes > 100 * 1024 * 1024) {
     showToast('Berkas terdeteksi cukup besar (>100 MB). Proses konversi mungkin membutuhkan memori & waktu lebih.', 'info');
@@ -233,7 +272,7 @@ function processInputFiles(files) {
   }
 }
 
-// Preset Filter Handler (All, Odd, Even)
+// Preset Filter Handler (All, First5, Odd, Even)
 function setPresetFilter(type) {
   document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
   
@@ -245,6 +284,10 @@ function setPresetFilter(type) {
   if (type === 'all') {
     elements.presetAllBtn.classList.add('active');
     elements.pageRangeInput.value = '';
+  } else if (type === 'first5') {
+    if (elements.presetFirst5Btn) elements.presetFirst5Btn.classList.add('active');
+    const limit = Math.min(5, state.totalPages);
+    elements.pageRangeInput.value = `1-${limit}`;
   } else if (type === 'odd') {
     elements.presetOddBtn.classList.add('active');
     const oddPages = [];
@@ -258,7 +301,7 @@ function setPresetFilter(type) {
   }
 }
 
-// Load PDF Document (with Lazy Loaded PDF.js)
+// Load PDF Document
 async function loadPdfFile(file) {
   resetFileState();
   state.inputMode = 'pdf';
@@ -289,7 +332,7 @@ async function loadPdfFile(file) {
   }
 }
 
-// Load Image Files (PNG, JPG, WEBP, etc.)
+// Load Image Files
 function loadImageFiles(files) {
   resetFileState();
   state.inputMode = 'images';
@@ -313,7 +356,7 @@ function loadImageFiles(files) {
   showToast(`Berhasil memuat ${files.length} gambar.`, 'success');
 }
 
-// Reset State & Memory Cleanup
+// Reset State
 function resetFileState() {
   state.inputMode = 'none';
   state.pdfFile = null;
@@ -322,6 +365,8 @@ function resetFileState() {
   state.fileNameBase = '';
   state.totalPages = 0;
   state.convertedPages = [];
+  state.galleryFilterQuery = '';
+  if (elements.gallerySearch) elements.gallerySearch.value = '';
   
   elements.pdfInput.value = '';
   elements.fileInfo.classList.add('hidden');
@@ -345,7 +390,7 @@ async function startConversion() {
 
   elements.progressCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Options
+  // Conversion Options
   const selectedFormat = document.querySelector('input[name="format"]:checked').value;
   let mimeType = 'image/png';
   if (selectedFormat === 'jpg') mimeType = 'image/jpeg';
@@ -353,6 +398,8 @@ async function startConversion() {
   
   const quality = parseInt(elements.jpgQualitySlider.value, 10) / 100;
   const scale = parseFloat(elements.scaleSelect.value);
+  const bgColor = elements.bgFillSelect ? elements.bgFillSelect.value : 'white';
+  const colorMode = elements.colorModeSelect ? elements.colorModeSelect.value : 'color';
   
   const pagesToConvert = parsePageRange(elements.pageRangeInput.value.trim(), state.totalPages);
   
@@ -366,9 +413,9 @@ async function startConversion() {
   updateProgress(0, total, 'Memulai konversi...');
 
   if (state.inputMode === 'pdf') {
-    await convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale);
+    await convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode);
   } else if (state.inputMode === 'images') {
-    await convertImagesMode(pagesToConvert, selectedFormat, mimeType, quality, scale);
+    await convertImagesMode(pagesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode);
   }
 
   updateProgress(total, total, 'Selesai!');
@@ -383,12 +430,48 @@ async function startConversion() {
   }, 300);
 }
 
-// Helper: Yield execution to main thread to unblock UI animations & rendering
 function yieldToMainThread(ms = 10) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Helper: Fast Unsharp Mask Sharpening Filter for HD Image Upscaling
+// Canvas Fill & Color Modes
+function applyCanvasBg(ctx, width, height, bgColor, selectedFormat) {
+  if (bgColor === 'white' || (selectedFormat === 'jpg' && bgColor === 'transparent')) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+  } else if (bgColor === 'black') {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, width, height);
+  }
+}
+
+function applyColorModeFilters(ctx, width, height, colorMode) {
+  if (colorMode === 'color') return;
+
+  try {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const d = imageData.data;
+
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      if (colorMode === 'grayscale') {
+        d[i] = gray;
+        d[i + 1] = gray;
+        d[i + 2] = gray;
+      } else if (colorMode === 'monochrome') {
+        const val = gray >= 128 ? 255 : 0;
+        d[i] = val;
+        d[i + 1] = val;
+        d[i + 2] = val;
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+  } catch (e) {
+    console.warn('Color filter error:', e);
+  }
+}
+
+// Fast Unsharp Mask Sharpening Filter
 function sharpenImageData(ctx, width, height, mix = 0.25) {
   try {
     const imageData = ctx.getImageData(0, 0, width, height);
@@ -419,7 +502,7 @@ function sharpenImageData(ctx, width, height, mix = 0.25) {
 }
 
 // PDF Conversion Routine
-async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale) {
+async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode) {
   const total = pagesToConvert.length;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -439,12 +522,11 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      if (selectedFormat === 'jpg') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      applyCanvasBg(ctx, canvas.width, canvas.height, bgColor, selectedFormat);
 
       await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+      applyColorModeFilters(ctx, canvas.width, canvas.height, colorMode);
 
       const dataUrl = canvas.toDataURL(mimeType, quality);
       const blob = await (await fetch(dataUrl)).blob();
@@ -466,8 +548,8 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
   }
 }
 
-// Images Conversion Routine (PNG <-> JPG <-> WEBP with HD Upscaling)
-async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale) {
+// Images Conversion Routine
+async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode) {
   const total = indicesToConvert.length;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -488,18 +570,16 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      if (selectedFormat === 'jpg') {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      applyCanvasBg(ctx, canvas.width, canvas.height, bgColor, selectedFormat);
 
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Apply HD edge sharpening filter when upscaling (>1.0x)
       if (scale > 1.0) {
         const sharpMix = Math.min(0.3, 0.12 * scale);
         sharpenImageData(ctx, canvas.width, canvas.height, sharpMix);
       }
+
+      applyColorModeFilters(ctx, canvas.width, canvas.height, colorMode);
 
       const dataUrl = canvas.toDataURL(mimeType, quality);
       const blob = await (await fetch(dataUrl)).blob();
@@ -523,7 +603,6 @@ async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, qua
   }
 }
 
-// Helper: Load HTML Image from File Object with memory cleanup
 function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -552,15 +631,25 @@ function finishConversion() {
   elements.convertBtn.disabled = false;
 }
 
-// Render Results Gallery Grid
+// Render Results Gallery Grid with Search & Action Buttons
 function renderGallery() {
   elements.galleryGrid.innerHTML = '';
-  elements.convertedCount.textContent = state.convertedPages.length;
+  
+  const query = state.galleryFilterQuery;
+  const filteredPages = state.convertedPages.filter(item => {
+    if (!query) return true;
+    const matchName = item.fileName.toLowerCase().includes(query);
+    const matchNum = item.pageNum.toString().includes(query);
+    return matchName || matchNum;
+  });
+
+  elements.convertedCount.textContent = filteredPages.length;
   updateZipCount();
 
   const isPdf = state.inputMode === 'pdf';
 
-  state.convertedPages.forEach((item, index) => {
+  filteredPages.forEach((item) => {
+    const index = state.convertedPages.indexOf(item);
     const card = document.createElement('div');
     card.className = `page-card ${item.selected ? 'selected' : ''}`;
     card.dataset.index = index;
@@ -584,8 +673,14 @@ function renderGallery() {
         </div>
       </div>
       <div class="card-bottom-bar">
-        <a href="${item.dataUrl}" download="${item.fileName}" class="btn btn-small btn-primary">
-          <i class="fa-solid fa-download"></i> Unduh
+        <button type="button" class="btn btn-small btn-secondary rotate-card-btn" data-index="${index}" title="Putar 90°">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <button type="button" class="btn btn-small btn-secondary copy-card-btn" data-index="${index}" title="Salin ke Clipboard">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <a href="${item.dataUrl}" download="${item.fileName}" class="btn btn-small btn-primary" title="Unduh">
+          <i class="fa-solid fa-download"></i>
         </a>
       </div>
     `;
@@ -599,6 +694,18 @@ function renderGallery() {
 
     const imgWrap = card.querySelector('.card-image-wrap');
     imgWrap.addEventListener('click', () => openModal(index));
+
+    const rotateBtn = card.querySelector('.rotate-card-btn');
+    rotateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      rotateConvertedItem(index);
+    });
+
+    const copyBtn = card.querySelector('.copy-card-btn');
+    copyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      copyItemToClipboard(state.convertedPages[index]);
+    });
 
     elements.galleryGrid.appendChild(card);
   });
@@ -617,7 +724,80 @@ function updateZipCount() {
   elements.downloadZipBtn.disabled = selectedCount === 0;
 }
 
-// Download Selected Images as ZIP (with Lazy Loaded JSZip)
+// Rotate Single Image in Converted Pages
+async function rotateConvertedItem(index) {
+  const item = state.convertedPages[index];
+  if (!item) return;
+
+  try {
+    showToast(`Memutar ${item.fileName}...`, 'info');
+    const img = new Image();
+    img.src = item.dataUrl;
+    await new Promise(resolve => img.onload = resolve);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalHeight;
+    canvas.height = img.naturalWidth;
+    const ctx = canvas.getContext('2d');
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(90 * Math.PI / 180);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+    const dataUrl = canvas.toDataURL(item.blob.type || 'image/png');
+    const blob = await (await fetch(dataUrl)).blob();
+
+    item.dataUrl = dataUrl;
+    item.blob = blob;
+    item.width = canvas.width;
+    item.height = canvas.height;
+
+    renderGallery();
+    showToast(`Berhasil memutar ${item.fileName}!`, 'success');
+  } catch (e) {
+    console.error('Rotate error:', e);
+    showToast('Gagal memutar gambar.', 'error');
+  }
+}
+
+// Copy Image to Clipboard
+async function copyItemToClipboard(item) {
+  try {
+    const response = await fetch(item.dataUrl);
+    const blob = await response.blob();
+
+    // Clipboard API requires image/png
+    let pngBlob = blob;
+    if (blob.type !== 'image/png') {
+      pngBlob = await convertBlobToPng(item.dataUrl);
+    }
+
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': pngBlob })
+    ]);
+    showToast(`Gambar ${item.fileName} berhasil disalin ke clipboard!`, 'success');
+  } catch (err) {
+    console.error('Clipboard copy failed:', err);
+    showToast('Tidak dapat menyalin gambar ke clipboard di browser ini.', 'error');
+  }
+}
+
+function convertBlobToPng(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(blob => resolve(blob), 'image/png');
+    };
+  });
+}
+
+// Download Selected Images as ZIP
 async function downloadAsZip() {
   const selectedItems = state.convertedPages.filter(p => p.selected);
   if (selectedItems.length === 0) {
@@ -657,6 +837,9 @@ function openModal(index) {
 
   lastFocusedElement = document.activeElement;
   state.currentModalIndex = index;
+  state.modalZoom = 1.0;
+  state.modalRotation = 0;
+  
   updateModalContent();
   elements.previewModal.classList.remove('hidden');
   
@@ -677,11 +860,44 @@ function updateModalContent() {
 
   elements.modalPrevBtn.disabled = state.currentModalIndex === 0;
   elements.modalNextBtn.disabled = state.currentModalIndex === state.convertedPages.length - 1;
+
+  updateModalViewportTransform();
+}
+
+function zoomModal(delta) {
+  state.modalZoom = Math.min(3.0, Math.max(0.4, state.modalZoom + delta));
+  updateModalViewportTransform();
+}
+
+function resetModalZoom() {
+  state.modalZoom = 1.0;
+  state.modalRotation = 0;
+  updateModalViewportTransform();
+}
+
+function rotateModalImage(degDelta) {
+  state.modalRotation = (state.modalRotation + degDelta) % 360;
+  updateModalViewportTransform();
+}
+
+function updateModalViewportTransform() {
+  if (!elements.modalViewport) return;
+  elements.modalViewport.style.transform = `scale(${state.modalZoom}) rotate(${state.modalRotation}deg)`;
+  if (elements.modalZoomVal) {
+    elements.modalZoomVal.textContent = `${Math.round(state.modalZoom * 100)}%`;
+  }
+}
+
+function copyCurrentModalToClipboard() {
+  const item = state.convertedPages[state.currentModalIndex];
+  if (item) copyItemToClipboard(item);
 }
 
 function showPrevModalImage() {
   if (state.currentModalIndex > 0) {
     state.currentModalIndex--;
+    state.modalZoom = 1.0;
+    state.modalRotation = 0;
     updateModalContent();
   }
 }
@@ -689,6 +905,8 @@ function showPrevModalImage() {
 function showNextModalImage() {
   if (state.currentModalIndex < state.convertedPages.length - 1) {
     state.currentModalIndex++;
+    state.modalZoom = 1.0;
+    state.modalRotation = 0;
     updateModalContent();
   }
 }
@@ -703,7 +921,7 @@ function closeModal() {
   }
 }
 
-// Helper: Page Range Parser (e.g., "1-3, 5, 8")
+// Helper: Page Range Parser
 function parsePageRange(rangeStr, maxPages) {
   if (!rangeStr) {
     return Array.from({ length: maxPages }, (_, i) => i + 1);
@@ -732,7 +950,7 @@ function parsePageRange(rangeStr, maxPages) {
   return Array.from(pages).sort((a, b) => a - b);
 }
 
-// Helper: Format File Size Bytes
+// Format Bytes
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -742,7 +960,7 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// Helper: Toast Notifications
+// Toast Notifications
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
