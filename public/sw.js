@@ -1,4 +1,4 @@
-const CACHE_NAME = 'docpressshot-v1';
+const CACHE_NAME = 'docpressshot-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -32,13 +32,19 @@ self.addEventListener('activate', (e) => {
 // Fetch Event
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+
+  // Ignore non-HTTP/HTTPS requests (e.g., chrome-extension://, moz-extension://)
+  if (!e.request.url.startsWith('http://') && !e.request.url.startsWith('https://')) {
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
       return fetch(e.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
           return response;
         }
         const responseToCache = response.clone();
