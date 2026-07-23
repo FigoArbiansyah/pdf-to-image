@@ -12,7 +12,8 @@
     "@vercel/analytics": "^2.0.1",
     "jszip": "^3.10.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.0.379"
+    "pdfjs-dist": "^4.0.379",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "vite": "^5.1.4"
