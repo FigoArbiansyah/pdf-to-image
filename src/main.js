@@ -226,7 +226,7 @@ const elements = {
   wmProgressPercent: document.getElementById('wm-progress-percent'),
   wmProgressFill: document.getElementById('wm-progress-fill'),
 
-  // OCR Elements
+  ocrIconBox: document.getElementById('ocr-icon-box'),
   ocrDropZone: document.getElementById('ocr-drop-zone'),
   ocrFileInput: document.getElementById('ocr-file-input'),
   ocrBrowseBtn: document.getElementById('ocr-browse-btn'),
@@ -1733,13 +1733,15 @@ function loadOcrFile(file) {
   resetOcrState();
   state.ocrFile = file;
 
-  elements.ocrFileName.textContent = file.name;
-  elements.ocrFileMeta.textContent = formatBytes(file.size);
-  elements.ocrDropZone.classList.add('hidden');
-  elements.ocrPanel.classList.remove('hidden');
+  if (elements.ocrFileName) elements.ocrFileName.textContent = file.name;
+  if (elements.ocrFileMeta) elements.ocrFileMeta.textContent = formatBytes(file.size);
+  if (elements.ocrDropZone) elements.ocrDropZone.classList.add('hidden');
+  if (elements.ocrPanel) elements.ocrPanel.classList.remove('hidden');
 
   const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-  elements.ocrIconBox.innerHTML = isPdf ? '<i class="fa-solid fa-file-pdf"></i>' : '<i class="fa-solid fa-file-image icon-image"></i>';
+  if (elements.ocrIconBox) {
+    elements.ocrIconBox.innerHTML = isPdf ? '<i class="fa-solid fa-file-pdf"></i>' : '<i class="fa-solid fa-file-image icon-image"></i>';
+  }
 
   showToast(`Berkas ${file.name} dimuat untuk OCR.`, 'info');
 }
