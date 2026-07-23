@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://doc-shot.vercel.app/sitemap.xml

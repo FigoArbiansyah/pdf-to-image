@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocPressShot Studio - Toolkit Konversi, Gabung, Pisah PDF &amp; Gambar HD Gratis</title>
+  <meta name="description" content="DocPressShot Studio: Aplikasi web instan untuk mengonversi, menggabungkan, memisahkan PDF, menambahkan watermark, dan mengekstrak teks OCR dari dokumen PDF &amp; Gambar secara 100% lokal di browser." />
+  <meta name="keywords" content="docpressshot, docpressshot studio, docshot, pdf to image, konversi pdf ke gambar, convert pdf to png, convert pdf to jpg, merge pdf, split pdf, pisah pdf, watermark pdf, ocr pdf, ekstrak teks pdf" />
+  <meta name="author" content="DocPressShot Studio" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#09090b" />
+  
+  <!-- Canonical & Manifest Tags -->
+  <link rel="canonical" href="https://doc-shot.vercel.app/" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+
+  <!-- Image Preloading & Favicons -->
+  <link rel="preload" as="image" href="/icon.png" fetchpriority="high" type="image/png" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <link rel="apple-touch-icon" href="/icon.png" />
+
+  <!-- Open Graph / Social Media Previews -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DocPressShot Studio - Toolkit PDF &amp; Gambar HD Multi-Fungsi" />
+  <meta property="og:description" content="Konversi, gabung, pisahkan PDF, watermark, dan ekstrak teks OCR instan 100% lokal &amp; privasi terjaga di peramban Anda." />
+  <meta property="og:site_name" content="DocPressShot Studio" />
+  <meta property="og:url" content="https://doc-shot.vercel.app/" />
+  <meta property="og:image" content="https://doc-shot.vercel.app/icon.png" />
+  <meta property="og:locale" content="id_ID" />
+
+  <!-- Twitter Card Meta -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DocPressShot Studio - Toolkit PDF &amp; Gambar HD" />
+  <meta name="twitter:description" content="Konversi, gabung, pisahkan PDF, watermark, dan ekstrak teks OCR instan tanpa unggah ke server." />
+  <meta name="twitter:image" content="https://doc-shot.vercel.app/icon.png" />
+
+  <!-- Schema.org JSON-LD Structured Data for Google Rich Snippets -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://doc-shot.vercel.app/#webapp",
+        "name": "DocPressShot Studio",
+        "url": "https://doc-shot.vercel.app/",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires HTML5 and JavaScript",
+        "description": "Toolkit instan untuk mengonversi PDF ke PNG/JPG/WEBP, menggabungkan PDF, memisahkan halaman PDF, menambahkan watermark, dan ekstraksi teks OCR 100% di peramban.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://doc-shot.vercel.app/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Apakah dokumen PDF &amp; gambar saya aman?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "100% Aman dan terjamin. Semua proses konversi, penggabungan, pemisahan, watermark, dan OCR diproses sepenuhnya di dalam peramban Anda secara lokal menggunakan memori perangkat tanpa pernah diunggah ke server."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Fitur apa saja yang tersedia di DocPressShot Studio?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "DocPressShot Studio menyediakan 5 alat utama: Konversi PDF/Gambar ke PNG/JPG/WEBP, Gabung PDF (Merger), Pisah &amp; Hapus Halaman PDF (Splitter), Watermark PDF, dan Ekstraksi Teks OCR lokal."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  
+  <!-- Resource Preconnects for Performance -->
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- CSS -->
+  <script type="module" crossorigin src="/assets/index.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index.css">
+</head>
+<body>
+  <!-- Skip Navigation Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Lompati ke Konten Utama</a>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header" role="banner">
+      <div class="brand">
+        <div class="brand-logo-container">
+          <div class="brand-logo">
+            <img src="/icon.png" alt="DocPressShot Studio Logo" width="58" height="58" class="brand-logo-img" />
+          </div>
+          <span class="logo-glow-effect"></span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-badge-pill">
+            <span class="pulse-dot-indigo" aria-hidden="true"></span>
+            <span>WebAssembly Engine &bull; 100% Client-Side Privacy</span>
+          </div>
+          <div class="brand-title-group">
+            <h1 class="brand-title">Doc<span class="highlight-press">Press</span>Shot</h1>
+            <span class="brand-tag"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Studio</span>
+          </div>
+          <p class="brand-subtitle">Toolkit Pemrosesan PDF &amp; Gambar HD Instan Tanpa Server.</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="privacy-badge" role="status">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          <span>100% Offline &amp; Privasi</span>
+        </div>
+        <div class="speed-badge">
+          <i class="fa-solid fa-bolt-lightning" aria-hidden="true"></i>
+          <span>Proses Lokal</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main" id="main-content" role="main" tabindex="-1">
+      <!-- Mode Tabs Navigation -->
+      <nav class="app-nav-tabs" role="tablist" aria-label="Mode Aplikasi">
+        <button type="button" class="nav-tab active" id="tab-converter" role="tab" aria-selected="true" aria-controls="converter-section">
+          <i class="fa-solid fa-file-image" aria-hidden="true"></i> Konversi Gambar
+        </button>
+        <button type="button" class="nav-tab" id="tab-merger" role="tab" aria-selected="false" aria-controls="merger-section">
+          <i class="fa-solid fa-object-group" aria-hidden="true"></i> Gabung PDF
+        </button>
+        <button type="button" class="nav-tab" id="tab-splitter" role="tab" aria-selected="false" aria-controls="splitter-section">
+          <i class="fa-solid fa-scissors" aria-hidden="true"></i> Pisah PDF
+        </button>
+        <button type="button" class="nav-tab" id="tab-watermark" role="tab" aria-selected="false" aria-controls="watermark-section">
+          <i class="fa-solid fa-stamp" aria-hidden="true"></i> Watermark PDF
+        </button>
+        <button type="button" class="nav-tab" id="tab-ocr" role="tab" aria-selected="false" aria-controls="ocr-section">
+          <i class="fa-solid fa-font" aria-hidden="true"></i> Ekstrak Teks (OCR)
+        </button>
+      </nav>
+
+      <!-- TAB 1: Converter Section -->
+      <div class="tab-content" id="converter-section" role="tabpanel" aria-labelledby="tab-converter">
+        <!-- Upload Section -->
+        <section class="card upload-card" id="drop-zone" role="region" aria-label="Area Pengunggahan Berkas">
+          <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" aria-describedby="file-hint-text" />
+          <div class="upload-content" id="upload-prompt">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-cloud-arrow-up upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="browse-btn" aria-label="Jelajahi dan pilih berkas"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Berkas (PDF / Gambar)</button></p>
+            <span class="file-hint" id="file-hint-text">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban secara offline</span>
+          </div>
+
+          <!-- Selected File Info State -->
+          <div class="file-info-bar hidden" id="file-info" role="status" aria-live="polite">
+            <div class="file-details">
+              <div class="file-icon-box" id="file-icon-box">
+                <i class="fa-solid fa-file-pdf" id="file-type-icon" aria-hidden="true"></i>
+              </div>
+              <div class="file-text">
+                <h4 id="file-name">document.pdf</h4>
+                <p><span id="file-size">0 MB</span> &bull; <span id="file-pages">0 Halaman</span></p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File" aria-label="Ganti Berkas Terpilih">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span>Ganti Berkas</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Settings Panel (Enabled when PDF/Image is loaded) -->
+        <section class="card settings-card disabled" id="settings-panel" aria-label="Pengaturan Konversi">
+          <h3 class="section-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Konversi</h3>
+          
+          <div class="settings-grid">
+            <!-- Format Picker -->
+            <div class="setting-group">
+              <label class="setting-label">Format Gambar Target</label>
+              <div class="format-toggle" role="radiogroup" aria-label="Pilih format gambar target">
+                <input type="radio" name="format" id="fmt-png" value="png" checked />
+                <label for="fmt-png" class="format-btn">
+                  <i class="fa-solid fa-file-image" aria-hidden="true"></i>
+                  <span class="fmt-title">PNG</span>
+                  <span class="fmt-desc">Lossless & Transparan</span>
+                </label>
+
+                <input type="radio" name="format" id="fmt-jpg" value="jpg" />
+                <label for="fmt-jpg" class="format-btn">
+                  <i class="fa-solid fa-image" aria-hidden="true"></i>
+                  <span class="fmt-title">JPG</span>
+                  <span class="fmt-desc">Kompresi Ringkas</span>
+                </label>
+
+                <input type="radio" name="format" id="fmt-webp" value="webp" />
+                <label for="fmt-webp" class="format-btn">
+                  <i class="fa-solid fa-file-code" aria-hidden="true"></i>
+                  <span class="fmt-title">WEBP</span>
+                  <span class="fmt-desc">Web Modern</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Quality Slider (Shown when JPG or WEBP selected) -->
+            <div class="setting-group hidden" id="quality-group">
+              <div class="label-with-value">
+                <label class="setting-label" for="jpg-quality" id="quality-label">Kualitas Kompresi</label>
+                <span class="val-badge" id="quality-val">90%</span>
+              </div>
+              <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" aria-label="Kualitas Kompresi Gambar" />
+              <div class="slider-labels">
+                <span>Ukuran Kecil</span>
+                <span>Kualitas Tinggi</span>
+              </div>
+            </div>
+
+            <!-- Render Scale / DPI -->
+            <div class="setting-group">
+              <label class="setting-label" for="scale-select">Resolusi / DPI Output</label>
+              <div class="select-wrapper">
+                <select id="scale-select" class="custom-select" aria-label="Resolusi atau DPI Gambar Output">
+                  <option value="1">1x Standard (72 DPI - Cepat)</option>
+                  <option value="1.5">1.5x Medium (108 DPI)</option>
+                  <option value="2" selected>2x High Quality / HD (144 DPI - Direkomendasikan)</option>
+                  <option value="3">3x Ultra HD (216 DPI - Tajam / Cetak)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Canvas Background Filler -->
+            <div class="setting-group">
+              <label class="setting-label" for="bg-fill-select">Latar Belakang Canvas</label>
+              <div class="select-wrapper">
+                <select id="bg-fill-select" class="custom-select" aria-label="Warna latar belakang gambar output">
+                  <option value="white" selected>Putih Clean (Default)</option>
+                  <option value="transparent">Transparan (PNG/WEBP)</option>
+                  <option value="black">Hitam Dark</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Image Color Mode -->
+            <div class="setting-group">
+              <label class="setting-label" for="color-mode-select">Mode Warna Gambar</label>
+              <div class="select-wrapper">
+                <select id="color-mode-select" class="custom-select" aria-label="Mode warna gambar hasil">
+                  <option value="color" selected>Full Color (Asli)</option>
+                  <option value="grayscale">Grayscale / Hitam-Putih Halus</option>
+                  <option value="monochrome">Monokrom Teks Kontras Tinggi</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Page Selection -->
+            <div class="setting-group setting-group-wide">
+              <label class="setting-label" for="page-range-input">Halaman yang Dikonversi</label>
+              <div class="range-input-box">
+                <input type="text" id="page-range-input" class="custom-input" placeholder="Contoh: 1-5, 8, 11 (Kosongkan untuk semua)" aria-label="Rentang halaman yang dikonversi" />
+              </div>
+              <div class="preset-buttons" role="group" aria-label="Pintasan pilihan halaman">
+                <button type="button" class="btn btn-preset active" id="preset-all-btn">Semua</button>
+                <button type="button" class="btn btn-preset" id="preset-first5-btn">5 Hal Pertama</button>
+                <button type="button" class="btn btn-preset" id="preset-odd-btn">Halaman Ganjil</button>
+                <button type="button" class="btn btn-preset" id="preset-even-btn">Halaman Genap</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="action-bar">
+            <button type="button" class="btn btn-primary btn-large" id="convert-btn" aria-label="Mulai proses konversi">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i> Konversi Ke Gambar Sekarang
+            </button>
+          </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="card progress-card hidden" id="progress-card" role="status" aria-live="polite">
+          <div class="progress-header">
+            <span class="progress-title" id="progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Memproses halaman PDF...</span>
+            <span class="progress-percent" id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+        </section>
+
+        <!-- Results Gallery -->
+        <section class="card results-card hidden" id="results-card" aria-label="Hasil Konversi">
+          <div class="results-header">
+            <div class="results-title-group">
+              <h3><i class="fa-solid fa-images" aria-hidden="true"></i> Hasil Konversi (<span id="converted-count">0</span> Gambar)</h3>
+              <div class="selection-actions">
+                <button type="button" class="btn-text" id="select-all-btn"><i class="fa-regular fa-square-check" aria-hidden="true"></i> Pilih Semua</button>
+                <button type="button" class="btn-text" id="deselect-all-btn"><i class="fa-regular fa-square" aria-hidden="true"></i> Hapus Pilihan</button>
+              </div>
+            </div>
+
+            <div class="results-toolbar">
+              <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+                <input type="text" id="gallery-search" class="custom-input custom-input-small" placeholder="Cari halaman..." aria-label="Cari gambar hasil konversi" />
+              </div>
+              <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
+                <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <div class="gallery-grid" id="gallery-grid">
+            <!-- Dynamically populated page cards -->
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 2: Merger Section -->
+      <div class="tab-content hidden" id="merger-section" role="tabpanel" aria-labelledby="tab-merger">
+        <!-- Merger Upload Section -->
+        <section class="card upload-card" id="merger-drop-zone" role="region" aria-label="Area Pengunggahan Berkas Merger">
+          <input type="file" id="merger-file-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas untuk digabungkan" />
+          <div class="upload-content">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-file-circle-plus upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan Berkas PDF atau Gambar di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="merger-browse-btn"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Banyak Berkas (PDF / PNG / JPG / WEBP)</button></p>
+            <span class="file-hint">Gabungkan PDF + JPG + PNG + WEBP menjadi 1 Berkas PDF &bull; Pemrosesan 100% Lokal</span>
+          </div>
+        </section>
+
+        <!-- Merger Files Panel & Reordering -->
+        <section class="card merger-panel hidden" id="merger-panel" aria-label="Pengurutan Dokumen Merger">
+          <div class="merger-header-bar">
+            <h3 class="section-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Urutan Dokumen Dokumen (<span id="merger-file-count">0</span> Berkas)</h3>
+            <div class="merger-header-actions">
+              <button type="button" class="btn btn-small btn-outline" id="merger-add-more-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah Berkas Lagi</button>
+              <button type="button" class="btn btn-small btn-secondary" id="merger-clear-all-btn"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Hapus Semua</button>
+            </div>
+          </div>
+
+          <div class="merger-file-list" id="merger-file-list">
+            <!-- Dynamically populated file item cards -->
+          </div>
+
+          <!-- Merger PDF Output Settings -->
+          <div class="settings-grid merger-settings-grid">
+            <div class="setting-group">
+              <label class="setting-label" for="merger-page-size">Ukuran Kertas PDF</label>
+              <div class="select-wrapper">
+                <select id="merger-page-size" class="custom-select" aria-label="Ukuran kertas PDF output">
+                  <option value="auto" selected>Otomatis / Sesuai Dokumen (Direkomendasikan)</option>
+                  <option value="a4">A4 Standard (210 x 297 mm)</option>
+                  <option value="letter">US Letter (8.5 x 11 in)</option>
+                  <option value="legal">US Legal (8.5 x 14 in)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="merger-orientation">Orientasi Halaman</label>
+              <div class="select-wrapper">
+                <select id="merger-orientation" class="custom-select" aria-label="Orientasi halaman PDF output">
+                  <option value="auto" selected>Otomatis (Ikuti Rasio Dokumen/Gambar)</option>
+                  <option value="portrait">Potret (Tegak)</option>
+                  <option value="landscape">Lansekap (Mendatar)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="merger-margin">Margin Halaman Gambar</label>
+              <div class="select-wrapper">
+                <select id="merger-margin" class="custom-select" aria-label="Margin Halaman PDF">
+                  <option value="none" selected>Tanpa Margin (Full Bleed - 0mm)</option>
+                  <option value="small">Sempit (5mm)</option>
+                  <option value="normal">Normal (10mm)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button type="button" class="btn btn-primary btn-large" id="merger-start-btn" aria-label="Gabungkan dokumen menjadi PDF">
+              <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Gabungkan &amp; Unduh Dokumen PDF
+            </button>
+          </div>
+        </section>
+
+        <!-- Merger Progress Section -->
+        <section class="card progress-card hidden" id="merger-progress-card" role="status" aria-live="polite">
+          <div class="progress-header">
+            <span class="progress-title" id="merger-progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Menggabungkan dokumen...</span>
+            <span class="progress-percent" id="merger-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="merger-progress-fill"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 3: PDF Splitter & Page Remover Section -->
+      <div class="tab-content hidden" id="splitter-section" role="tabpanel" aria-labelledby="tab-splitter">
+        <section class="card upload-card" id="splitter-drop-zone">
+          <input type="file" id="splitter-file-input" accept="application/pdf" hidden />
+          <div class="upload-content" id="splitter-upload-prompt">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-scissors upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan Berkas PDF di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="splitter-browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas PDF</button></p>
+            <span class="file-hint">Pisahkan halaman PDF atau hapus halaman tertentu &bull; Pemrosesan 100% Lokal</span>
+          </div>
+        </section>
+
+        <section class="card splitter-panel hidden" id="splitter-panel">
+          <div class="merger-header-bar">
+            <div class="file-details">
+              <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+              <div class="file-text">
+                <h4 id="splitter-file-name">document.pdf</h4>
+                <p><span id="splitter-file-meta">0 MB • 0 Halaman</span></p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-small" id="splitter-change-btn"><i class="fa-solid fa-rotate-left"></i> Ganti PDF</button>
+          </div>
+
+          <div class="splitter-options">
+            <label class="setting-label">Mode Pemisahan PDF</label>
+            <div class="format-toggle" role="radiogroup">
+              <input type="radio" name="split-mode" id="split-mode-extract" value="extract" checked />
+              <label for="split-mode-extract" class="format-btn">
+                <i class="fa-solid fa-object-group"></i>
+                <span class="fmt-title">Ekstrak Terpilih</span>
+                <span class="fmt-desc">Gabung halaman centang ke 1 PDF</span>
+              </label>
+
+              <input type="radio" name="split-mode" id="split-mode-delete" value="delete" />
+              <label for="split-mode-delete" class="format-btn">
+                <i class="fa-solid fa-trash"></i>
+                <span class="fmt-title">Hapus Terpilih</span>
+                <span class="fmt-desc">Buang halaman centang, simpan sisa</span>
+              </label>
+
+              <input type="radio" name="split-mode" id="split-mode-all" value="all" />
+              <label for="split-mode-all" class="format-btn">
+                <i class="fa-solid fa-file-export"></i>
+                <span class="fmt-title">Pisah Setiap Hal</span>
+                <span class="fmt-desc">Simpan tiap halaman ke PDF terpisah (ZIP)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="results-header" style="margin-top: 1rem; border-bottom: none;">
+            <div class="results-title-group">
+              <h3><i class="fa-solid fa-square-check"></i> Pilih Halaman (<span id="splitter-selected-count">0</span> Halaman Tercentang)</h3>
+              <div class="selection-actions">
+                <button type="button" class="btn-text" id="splitter-select-all"><i class="fa-regular fa-square-check"></i> Pilih Semua</button>
+                <button type="button" class="btn-text" id="splitter-deselect-all"><i class="fa-regular fa-square"></i> Hapus Pilihan</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="gallery-grid" id="splitter-pages-grid">
+            <!-- Dynamically populated page thumbnails with checkboxes -->
+          </div>
+
+          <div class="action-bar" style="margin-top: 1.5rem;">
+            <button type="button" class="btn btn-primary btn-large" id="splitter-start-btn">
+              <i class="fa-solid fa-scissors"></i> Proses &amp; Unduh Hasil PDF
+            </button>
+          </div>
+        </section>
+
+        <section class="card progress-card hidden" id="splitter-progress-card">
+          <div class="progress-header">
+            <span class="progress-title" id="splitter-progress-status"><i class="fa-solid fa-spinner fa-spin"></i> Memproses halaman PDF...</span>
+            <span class="progress-percent" id="splitter-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="splitter-progress-fill"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 4: Watermark PDF Section -->
+      <div class="tab-content hidden" id="watermark-section" role="tabpanel" aria-labelledby="tab-watermark">
+        <section class="card upload-card" id="wm-drop-zone">
+          <input type="file" id="wm-file-input" accept="application/pdf" hidden />
+          <div class="upload-content" id="wm-upload-prompt">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-stamp upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan Berkas PDF di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="wm-browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas PDF</button></p>
+            <span class="file-hint">Bubuhi watermark teks atau gambar logo ke dokumen PDF &bull; 100% Lokal</span>
+          </div>
+        </section>
+
+        <section class="card watermark-panel hidden" id="wm-panel">
+          <div class="merger-header-bar">
+            <div class="file-details">
+              <div class="file-icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+              <div class="file-text">
+                <h4 id="wm-file-name">document.pdf</h4>
+                <p><span id="wm-file-meta">0 MB • 0 Halaman</span></p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-small" id="wm-change-btn"><i class="fa-solid fa-rotate-left"></i> Ganti PDF</button>
+          </div>
+
+          <div class="settings-grid" style="margin-top: 1.2rem;">
+            <div class="setting-group setting-group-wide">
+              <label class="setting-label" for="wm-text-input">Teks Watermark</label>
+              <input type="text" id="wm-text-input" class="custom-input" value="RAHASIA / CONFIDENTIAL" placeholder="Masukkan teks watermark..." />
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="wm-color-select">Warna Teks</label>
+              <div class="select-wrapper">
+                <select id="wm-color-select" class="custom-select">
+                  <option value="red" selected>Merah Elegan (#EF4444)</option>
+                  <option value="black">Hitam Pekat (#000000)</option>
+                  <option value="gray">Abu-abu Soft (#6B7280)</option>
+                  <option value="blue">Biru Studio (#3B82F6)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="label-with-value">
+                <label class="setting-label" for="wm-opacity-slider">Transparansi (Opasitas)</label>
+                <span class="val-badge" id="wm-opacity-val">30%</span>
+              </div>
+              <input type="range" id="wm-opacity-slider" min="10" max="100" value="30" step="5" class="slider" />
+            </div>
+
+            <div class="setting-group">
+              <div class="label-with-value">
+                <label class="setting-label" for="wm-size-slider">Ukuran Teks</label>
+                <span class="val-badge" id="wm-size-val">48 px</span>
+              </div>
+              <input type="range" id="wm-size-slider" min="16" max="100" value="48" step="4" class="slider" />
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="wm-angle-select">Sudut Rotasi</label>
+              <div class="select-wrapper">
+                <select id="wm-angle-select" class="custom-select">
+                  <option value="45" selected>Diagonal 45° (Direkomendasikan)</option>
+                  <option value="0">Horisontal 0°</option>
+                  <option value="-45">Diagonal -45°</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-bar" style="margin-top: 1.5rem;">
+            <button type="button" class="btn btn-primary btn-large" id="wm-start-btn">
+              <i class="fa-solid fa-stamp"></i> Terapkan Watermark &amp; Unduh PDF
+            </button>
+          </div>
+        </section>
+
+        <section class="card progress-card hidden" id="wm-progress-card">
+          <div class="progress-header">
+            <span class="progress-title" id="wm-progress-status"><i class="fa-solid fa-spinner fa-spin"></i> Membubuhi watermark...</span>
+            <span class="progress-percent" id="wm-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="wm-progress-fill"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 5: OCR Text Extractor Section -->
+      <div class="tab-content hidden" id="ocr-section" role="tabpanel" aria-labelledby="tab-ocr">
+        <section class="card upload-card" id="ocr-drop-zone">
+          <input type="file" id="ocr-file-input" accept="application/pdf, image/png, image/jpeg, image/webp" hidden />
+          <div class="upload-content" id="ocr-upload-prompt">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-font upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan Dokumen PDF atau Gambar di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="ocr-browse-btn"><i class="fa-solid fa-folder-open"></i> Pilih Berkas (PDF / Gambar)</button></p>
+            <span class="file-hint">Ekstrak teks dari PDF atau Scan Gambar menggunakan OCR Lokal &bull; 100% Privasi</span>
+          </div>
+        </section>
+
+        <section class="card ocr-panel hidden" id="ocr-panel">
+          <div class="merger-header-bar">
+            <div class="file-details">
+              <div class="file-icon-box" id="ocr-icon-box"><i class="fa-solid fa-file-lines"></i></div>
+              <div class="file-text">
+                <h4 id="ocr-file-name">document.pdf</h4>
+                <p><span id="ocr-file-meta">0 MB</span></p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-small" id="ocr-change-btn"><i class="fa-solid fa-rotate-left"></i> Ganti Berkas</button>
+          </div>
+
+          <div class="action-bar" style="margin-top: 1rem;">
+            <button type="button" class="btn btn-primary btn-large" id="ocr-start-btn">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Ekstrak Teks Sekarang
+            </button>
+          </div>
+        </section>
+
+        <section class="card progress-card hidden" id="ocr-progress-card">
+          <div class="progress-header">
+            <span class="progress-title" id="ocr-progress-status"><i class="fa-solid fa-spinner fa-spin"></i> Membaca teks dokumen...</span>
+            <span class="progress-percent" id="ocr-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="ocr-progress-fill"></div>
+          </div>
+        </section>
+
+        <section class="card ocr-result-card hidden" id="ocr-result-card">
+          <div class="results-header">
+            <div class="results-title-group">
+              <h3><i class="fa-solid fa-align-left"></i> Teks Hasil Ekstraksi OCR</h3>
+            </div>
+            <div class="results-toolbar">
+              <button type="button" class="btn btn-secondary btn-small" id="ocr-copy-btn"><i class="fa-solid fa-copy"></i> Salin Teks</button>
+              <button type="button" class="btn btn-success btn-small" id="ocr-download-btn"><i class="fa-solid fa-download"></i> Unduh File TXT</button>
+            </div>
+          </div>
+          <textarea id="ocr-text-result" class="custom-input ocr-textarea" rows="12" readonly placeholder="Hasil teks yang diekstrak akan muncul di sini..."></textarea>
+        </section>
+      </div>
+
+      <!-- FAQ Accordion Section for SEO & User Guidance -->
+      <section class="card faq-section" id="faq" aria-label="Pertanyaan Umum">
+        <h3 class="section-title"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> Pertanyaan Umum (FAQ)</h3>
+        <div class="faq-accordion-list">
+          <details class="faq-accordion-item" open>
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Apakah berkas PDF &amp; gambar saya aman?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>100% Aman dan terjamin. Semua proses konversi diproses sepenuhnya di dalam peramban (*browser*) Anda secara lokal menggunakan memori perangkat. Berkas dokumen Anda tidak pernah diunggah atau dikirim ke server manapun.</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-file-export" aria-hidden="true"></i> Format apa saja yang didukung?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Anda dapat mengonversi PDF ke PNG (Lossless &amp; transparan), JPG (Kompresi ringkas), atau WEBP (Format modern web), serta mengonversi antar-format gambar (seperti PNG ke JPG, JPG ke PNG, WEBP, dll) dengan pilihan DPI hingga 3x Ultra HD (216 DPI).</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-infinity" aria-hidden="true"></i> Apakah ada batasan jumlah atau ukuran file?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Tidak ada batasan jumlah halaman maupun ukuran berkas karena pemrosesan berjalan langsung di peramban Anda. Semua fitur 100% gratis tanpa pendaftaran atau watermark.</p>
+            </div>
+          </details>
+
+          <details class="faq-accordion-item">
+            <summary class="faq-summary">
+              <span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Fitur penyuntingan gambar apa yang tersedia?</span>
+              <i class="fa-solid fa-chevron-down accordion-icon" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-content">
+              <p>Anda dapat mengatur latar belakang canvas (Putih, Transparan, Hitam), mengubah mode warna ke Grayscale/Monokrom, memutar (rotate) gambar 90 derajat, memperbesar/memperkecil dengan kontrol Zoom, serta menyalin gambar langsung ke clipboard tanpa mengunduhnya.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" role="contentinfo">
+      <p>&copy; 2026 PDF to Image Studio &bull; Modern Glassmorphism &amp; High-Performance Browser Converter</p>
+    </footer>
+  </div>
+
+  <!-- Fullscreen Image Lightbox Modal -->
+  <div class="modal hidden" id="preview-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h4 id="modal-title">Pratinjau Halaman</h4>
+          <span id="modal-page-num" class="modal-page-indicator">1 / 1</span>
+        </div>
+
+        <div class="modal-toolbar">
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-out" title="Perkecil (Zoom Out)" aria-label="Perkecil"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-reset" title="Reset Zoom" aria-label="Reset Zoom"><span class="zoom-val-text" id="modal-zoom-val">100%</span></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-zoom-in" title="Perbesar (Zoom In)" aria-label="Perbesar"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+          
+          <div class="toolbar-divider"></div>
+          
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-rotate-left" title="Putar Kiri 90°" aria-label="Putar Kiri"><i class="fa-solid fa-rotate-left"></i></button>
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-rotate-right" title="Putar Kanan 90°" aria-label="Putar Kanan"><i class="fa-solid fa-rotate-right"></i></button>
+          
+          <div class="toolbar-divider"></div>
+
+          <button type="button" class="btn btn-icon btn-secondary" id="modal-copy-btn" title="Salin ke Clipboard" aria-label="Salin Gambar"><i class="fa-solid fa-copy"></i></button>
+          <a id="modal-download-link" class="btn btn-primary btn-icon" download title="Unduh Gambar Ini" aria-label="Unduh gambar ini">
+            <i class="fa-solid fa-download" aria-hidden="true"></i>
+          </a>
+
+          <div class="toolbar-divider"></div>
+
+          <div class="modal-nav-btns">
+            <button type="button" class="btn btn-icon btn-secondary" id="modal-prev-btn" title="Gambar Sebelumnya" aria-label="Gambar Sebelumnya"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-icon btn-secondary" id="modal-next-btn" title="Gambar Selanjutnya" aria-label="Gambar Selanjutnya"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+            <button class="modal-close" id="modal-close" aria-label="Tutup Pratinjau"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body" id="modal-body">
+        <div class="modal-image-viewport" id="modal-viewport">
+          <img id="modal-image" src="" alt="Pratinjau HD" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span class="modal-shortcut-tip"><i class="fa-solid fa-keyboard"></i> Navigasi: <kbd>←</kbd> <kbd>→</kbd> Pindah | <kbd>+</kbd> <kbd>-</kbd> Zoom | <kbd>Esc</kbd> Tutup</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- JavaScript App Entry point -->
+</body>
+</html>

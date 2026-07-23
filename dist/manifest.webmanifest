@@ -1,0 +1,18 @@
+{
+  "name": "DocPressShot Studio - Toolkit PDF & Gambar HD",
+  "short_name": "DocPressShot",
+  "description": "DocPressShot Studio: Aplikasi web instan untuk mengonversi, menggabungkan, memisahkan, memberi watermark, dan ekstraksi teks OCR dari berkas PDF & Gambar 100% lokal dan privasi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
