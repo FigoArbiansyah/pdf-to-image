@@ -5,6 +5,7 @@ inject();
 
 // Application State
 const state = {
+  activeTab: 'converter', // 'converter' | 'merger'
   inputMode: 'none', // 'none' | 'pdf' | 'images'
   pdfFile: null,
   pdfDocument: null,
@@ -16,12 +17,17 @@ const state = {
   currentModalIndex: 0,
   modalZoom: 1.0,
   modalRotation: 0,
-  galleryFilterQuery: ''
+  galleryFilterQuery: '',
+
+  // Merger State
+  mergerFiles: [], // Array of { id, file, name, size, type, pageCount, dataUrl }
+  isMerging: false
 };
 
 // Lazy Loaded Modules Cache
 let pdfjsLibModule = null;
 let JSZipModule = null;
+let pdfLibModule = null;
 
 // Lazy load PDF.js Engine
 async function getPdfJs() {
@@ -45,8 +51,23 @@ async function getJSZip() {
   return JSZipModule;
 }
 
+// Lazy load PDF-Lib Engine
+async function getPdfLib() {
+  if (!pdfLibModule) {
+    pdfLibModule = await import('pdf-lib');
+  }
+  return pdfLibModule;
+}
+
 // DOM Elements
 const elements = {
+  // Navigation Tabs
+  tabConverter: document.getElementById('tab-converter'),
+  tabMerger: document.getElementById('tab-merger'),
+  converterSection: document.getElementById('converter-section'),
+  mergerSection: document.getElementById('merger-section'),
+
+  // Converter Elements
   dropZone: document.getElementById('drop-zone'),
   pdfInput: document.getElementById('pdf-input'),
   uploadPrompt: document.getElementById('upload-prompt'),
@@ -88,6 +109,7 @@ const elements = {
   gallerySearch: document.getElementById('gallery-search'),
   galleryGrid: document.getElementById('gallery-grid'),
   
+  // Modal Elements
   previewModal: document.getElementById('preview-modal'),
   modalBackdrop: document.getElementById('modal-backdrop'),
   modalClose: document.getElementById('modal-close'),
@@ -107,16 +129,35 @@ const elements = {
   modalRotateRight: document.getElementById('modal-rotate-right'),
   modalCopyBtn: document.getElementById('modal-copy-btn'),
   
+  // Merger Elements
+  mergerDropZone: document.getElementById('merger-drop-zone'),
+  mergerFileInput: document.getElementById('merger-file-input'),
+  mergerBrowseBtn: document.getElementById('merger-browse-btn'),
+  mergerPanel: document.getElementById('merger-panel'),
+  mergerFileCount: document.getElementById('merger-file-count'),
+  mergerFileList: document.getElementById('merger-file-list'),
+  mergerAddMoreBtn: document.getElementById('merger-add-more-btn'),
+  mergerClearAllBtn: document.getElementById('merger-clear-all-btn'),
+  mergerPageSize: document.getElementById('merger-page-size'),
+  mergerOrientation: document.getElementById('merger-orientation'),
+  mergerMargin: document.getElementById('merger-margin'),
+  mergerStartBtn: document.getElementById('merger-start-btn'),
+  mergerProgressCard: document.getElementById('merger-progress-card'),
+  mergerProgressStatus: document.getElementById('merger-progress-status'),
+  mergerProgressPercent: document.getElementById('merger-progress-percent'),
+  mergerProgressFill: document.getElementById('merger-progress-fill'),
+
   toastContainer: document.getElementById('toast-container')
 };
 
 // Initialize App
 function init() {
-  // File Upload Handlers
+  initTabNavigation();
+
+  // Converter Handlers
   elements.browseBtn.addEventListener('click', () => elements.pdfInput.click());
   elements.pdfInput.addEventListener('change', handleFileSelect);
   
-  // Drag & Drop
   ['dragenter', 'dragover'].forEach(eventName => {
     elements.dropZone.addEventListener(eventName, (e) => {
       e.preventDefault();
@@ -142,7 +183,6 @@ function init() {
 
   elements.changeFileBtn.addEventListener('click', resetFileState);
 
-  // Format Radio Handler
   elements.formatRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
       const fmt = e.target.value;
@@ -155,12 +195,10 @@ function init() {
     });
   });
 
-  // Quality Slider Handler
   elements.jpgQualitySlider.addEventListener('input', (e) => {
     elements.qualityVal.textContent = `${e.target.value}%`;
   });
 
-  // Preset Handlers
   elements.presetAllBtn.addEventListener('click', () => setPresetFilter('all'));
   if (elements.presetFirst5Btn) {
     elements.presetFirst5Btn.addEventListener('click', () => setPresetFilter('first5'));
@@ -172,13 +210,11 @@ function init() {
     document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
   });
 
-  // Conversion Handlers
   elements.convertBtn.addEventListener('click', startConversion);
   elements.selectAllBtn.addEventListener('click', () => toggleAllSelections(true));
   elements.deselectAllBtn.addEventListener('click', () => toggleAllSelections(false));
   elements.downloadZipBtn.addEventListener('click', downloadAsZip);
 
-  // Gallery Search Handler
   if (elements.gallerySearch) {
     elements.gallerySearch.addEventListener('input', (e) => {
       state.galleryFilterQuery = e.target.value.toLowerCase().trim();
@@ -186,7 +222,7 @@ function init() {
     });
   }
 
-  // Lightbox Modal Navigation & Tools
+  // Lightbox Handlers
   elements.modalClose.addEventListener('click', closeModal);
   elements.modalBackdrop.addEventListener('click', closeModal);
   elements.modalPrevBtn.addEventListener('click', showPrevModalImage);
@@ -201,10 +237,74 @@ function init() {
     elements.modalCopyBtn.addEventListener('click', copyCurrentModalToClipboard);
   }
 
+  // Merger Handlers
+  if (elements.mergerBrowseBtn) {
+    elements.mergerBrowseBtn.addEventListener('click', () => elements.mergerFileInput.click());
+    elements.mergerFileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) processMergerFiles(files);
+      e.target.value = '';
+    });
+  }
+
+  if (elements.mergerAddMoreBtn) {
+    elements.mergerAddMoreBtn.addEventListener('click', () => elements.mergerFileInput.click());
+    elements.mergerClearAllBtn.addEventListener('click', clearAllMergerFiles);
+  }
+
+  if (elements.mergerDropZone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      elements.mergerDropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        elements.mergerDropZone.classList.add('drag-over');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      elements.mergerDropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        elements.mergerDropZone.classList.remove('drag-over');
+      });
+    });
+
+    elements.mergerDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      elements.mergerDropZone.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) processMergerFiles(files);
+    });
+  }
+
+  if (elements.mergerStartBtn) {
+    elements.mergerStartBtn.addEventListener('click', startMergerProcess);
+  }
+
   document.addEventListener('keydown', handleGlobalKeydown);
 }
 
-// Keyboard Navigation & Shortcuts
+// App Mode Navigation Tabs
+function initTabNavigation() {
+  if (!elements.tabConverter || !elements.tabMerger) return;
+
+  elements.tabConverter.addEventListener('click', () => switchTab('converter'));
+  elements.tabMerger.addEventListener('click', () => switchTab('merger'));
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  const isConverter = tab === 'converter';
+
+  elements.tabConverter.classList.toggle('active', isConverter);
+  elements.tabConverter.setAttribute('aria-selected', isConverter ? 'true' : 'false');
+
+  elements.tabMerger.classList.toggle('active', !isConverter);
+  elements.tabMerger.setAttribute('aria-selected', !isConverter ? 'true' : 'false');
+
+  elements.converterSection.classList.toggle('hidden', !isConverter);
+  elements.mergerSection.classList.toggle('hidden', isConverter);
+}
+
+// Keyboard Shortcuts
 function handleGlobalKeydown(e) {
   if (elements.previewModal.classList.contains('hidden')) return;
 
@@ -217,7 +317,6 @@ function handleGlobalKeydown(e) {
   if (e.key === '+' || e.key === '=') zoomModal(0.2);
   if (e.key === '-' || e.key === '_') zoomModal(-0.2);
 
-  // Modal Focus Trap
   if (e.key === 'Tab') {
     const focusables = Array.from(elements.previewModal.querySelectorAll('button:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"])'));
     if (focusables.length === 0) return;
@@ -239,7 +338,7 @@ function handleGlobalKeydown(e) {
   }
 }
 
-// File Selection Handler
+// Converter File Selection Handler
 function handleFileSelect(e) {
   const files = Array.from(e.target.files);
   if (files.length > 0) {
@@ -247,7 +346,6 @@ function handleFileSelect(e) {
   }
 }
 
-// Process Uploaded Files (PDF vs Images)
 function processInputFiles(files) {
   const emptyFiles = files.filter(f => f.size === 0);
   if (emptyFiles.length > 0) {
@@ -272,7 +370,6 @@ function processInputFiles(files) {
   }
 }
 
-// Preset Filter Handler (All, First5, Odd, Even)
 function setPresetFilter(type) {
   document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
   
@@ -301,7 +398,6 @@ function setPresetFilter(type) {
   }
 }
 
-// Load PDF Document
 async function loadPdfFile(file) {
   resetFileState();
   state.inputMode = 'pdf';
@@ -332,7 +428,6 @@ async function loadPdfFile(file) {
   }
 }
 
-// Load Image Files
 function loadImageFiles(files) {
   resetFileState();
   state.inputMode = 'images';
@@ -356,7 +451,6 @@ function loadImageFiles(files) {
   showToast(`Berhasil memuat ${files.length} gambar.`, 'success');
 }
 
-// Reset State
 function resetFileState() {
   state.inputMode = 'none';
   state.pdfFile = null;
@@ -377,7 +471,6 @@ function resetFileState() {
   elements.galleryGrid.innerHTML = '';
 }
 
-// Start Conversion Process
 async function startConversion() {
   if (state.inputMode === 'none' || state.isConverting) return;
   
@@ -390,7 +483,6 @@ async function startConversion() {
 
   elements.progressCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Conversion Options
   const selectedFormat = document.querySelector('input[name="format"]:checked').value;
   let mimeType = 'image/png';
   if (selectedFormat === 'jpg') mimeType = 'image/jpeg';
@@ -434,7 +526,6 @@ function yieldToMainThread(ms = 10) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Canvas Fill & Color Modes
 function applyCanvasBg(ctx, width, height, bgColor, selectedFormat) {
   if (bgColor === 'white' || (selectedFormat === 'jpg' && bgColor === 'transparent')) {
     ctx.fillStyle = '#FFFFFF';
@@ -471,7 +562,6 @@ function applyColorModeFilters(ctx, width, height, colorMode) {
   }
 }
 
-// Fast Unsharp Mask Sharpening Filter
 function sharpenImageData(ctx, width, height, mix = 0.25) {
   try {
     const imageData = ctx.getImageData(0, 0, width, height);
@@ -501,7 +591,6 @@ function sharpenImageData(ctx, width, height, mix = 0.25) {
   }
 }
 
-// PDF Conversion Routine
 async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode) {
   const total = pagesToConvert.length;
   const canvas = document.createElement('canvas');
@@ -548,7 +637,6 @@ async function convertPdfMode(pagesToConvert, selectedFormat, mimeType, quality,
   }
 }
 
-// Images Conversion Routine
 async function convertImagesMode(indicesToConvert, selectedFormat, mimeType, quality, scale, bgColor, colorMode) {
   const total = indicesToConvert.length;
   const canvas = document.createElement('canvas');
@@ -631,7 +719,6 @@ function finishConversion() {
   elements.convertBtn.disabled = false;
 }
 
-// Render Results Gallery Grid with Search & Action Buttons
 function renderGallery() {
   elements.galleryGrid.innerHTML = '';
   
@@ -724,7 +811,6 @@ function updateZipCount() {
   elements.downloadZipBtn.disabled = selectedCount === 0;
 }
 
-// Rotate Single Image in Converted Pages
 async function rotateConvertedItem(index) {
   const item = state.convertedPages[index];
   if (!item) return;
@@ -760,13 +846,11 @@ async function rotateConvertedItem(index) {
   }
 }
 
-// Copy Image to Clipboard
 async function copyItemToClipboard(item) {
   try {
     const response = await fetch(item.dataUrl);
     const blob = await response.blob();
 
-    // Clipboard API requires image/png
     let pngBlob = blob;
     if (blob.type !== 'image/png') {
       pngBlob = await convertBlobToPng(item.dataUrl);
@@ -797,7 +881,6 @@ function convertBlobToPng(dataUrl) {
   });
 }
 
-// Download Selected Images as ZIP
 async function downloadAsZip() {
   const selectedItems = state.convertedPages.filter(p => p.selected);
   if (selectedItems.length === 0) {
@@ -829,7 +912,7 @@ async function downloadAsZip() {
   showToast('Berkas ZIP berhasil diunduh!', 'success');
 }
 
-// Lightbox Modal Functions & Navigation
+// Lightbox Modal Functions
 let lastFocusedElement = null;
 
 function openModal(index) {
@@ -921,7 +1004,286 @@ function closeModal() {
   }
 }
 
-// Helper: Page Range Parser
+/* ==========================================================================
+   DOCUMENT MERGER LOGIC (PDF + PNG + JPG + WEBP into 1 PDF)
+   ========================================================================== */
+
+async function processMergerFiles(files) {
+  const validFiles = files.filter(f => f.size > 0 && (f.type === 'application/pdf' || f.type.startsWith('image/') || /\.(pdf|png|jpe?g|webp|gif|bmp)$/i.test(f.name)));
+
+  if (validFiles.length === 0) {
+    showToast('Mohon pilih berkas valid berformat PDF atau Gambar.', 'error');
+    return;
+  }
+
+  showToast('Membaca info berkas...', 'info');
+
+  for (const file of validFiles) {
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    let pageCount = 1;
+
+    if (isPdf) {
+      try {
+        const pdfjsLib = await getPdfJs();
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        pageCount = pdfDoc.numPages;
+      } catch (err) {
+        console.warn(`Gagal membaca detail PDF ${file.name}:`, err);
+      }
+    }
+
+    state.mergerFiles.push({
+      id: 'm_' + Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      size: file.size,
+      type: isPdf ? 'pdf' : 'image',
+      pageCount
+    });
+  }
+
+  renderMergerFileList();
+  showToast(`Berhasil menambahkan ${validFiles.length} berkas ke antrean merger.`, 'success');
+}
+
+function renderMergerFileList() {
+  elements.mergerFileList.innerHTML = '';
+  elements.mergerFileCount.textContent = state.mergerFiles.length;
+
+  if (state.mergerFiles.length === 0) {
+    elements.mergerPanel.classList.add('hidden');
+    elements.mergerDropZone.classList.remove('hidden');
+    return;
+  }
+
+  elements.mergerDropZone.classList.add('hidden');
+  elements.mergerPanel.classList.remove('hidden');
+
+  state.mergerFiles.forEach((item, index) => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'merger-file-item';
+
+    const iconClass = item.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image icon-image';
+    const metaText = item.type === 'pdf' ? `${formatBytes(item.size)} • ${item.pageCount} Halaman` : `${formatBytes(item.size)} • 1 Gambar`;
+
+    itemEl.innerHTML = `
+      <div class="merger-item-main">
+        <span class="merger-item-index">${index + 1}</span>
+        <i class="fa-solid ${iconClass} merger-item-icon" aria-hidden="true"></i>
+        <div class="merger-item-details">
+          <span class="merger-item-name" title="${item.name}">${item.name}</span>
+          <span class="merger-item-meta">${metaText}</span>
+        </div>
+      </div>
+      <div class="merger-item-actions">
+        <button type="button" class="btn-move move-up-btn" data-index="${index}" title="Naikkan Urutan" ${index === 0 ? 'disabled' : ''}>
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+        <button type="button" class="btn-move move-down-btn" data-index="${index}" title="Turunkan Urutan" ${index === state.mergerFiles.length - 1 ? 'disabled' : ''}>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <button type="button" class="btn-delete-item delete-item-btn" data-index="${index}" title="Hapus Dari Antrean">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `;
+
+    itemEl.querySelector('.move-up-btn').addEventListener('click', () => moveMergerItem(index, -1));
+    itemEl.querySelector('.move-down-btn').addEventListener('click', () => moveMergerItem(index, 1));
+    itemEl.querySelector('.delete-item-btn').addEventListener('click', () => deleteMergerItem(index));
+
+    elements.mergerFileList.appendChild(itemEl);
+  });
+}
+
+function moveMergerItem(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= state.mergerFiles.length) return;
+
+  const temp = state.mergerFiles[index];
+  state.mergerFiles[index] = state.mergerFiles[newIndex];
+  state.mergerFiles[newIndex] = temp;
+
+  renderMergerFileList();
+}
+
+function deleteMergerItem(index) {
+  state.mergerFiles.splice(index, 1);
+  renderMergerFileList();
+  showToast('Berkas dihapus dari antrean.', 'info');
+}
+
+function clearAllMergerFiles() {
+  state.mergerFiles = [];
+  elements.mergerFileInput.value = '';
+  renderMergerFileList();
+  showToast('Semua berkas merger dibersihkan.', 'info');
+}
+
+// Perform Document Merger & Create Downloadable PDF
+async function startMergerProcess() {
+  if (state.mergerFiles.length === 0 || state.isMerging) return;
+
+  state.isMerging = true;
+  elements.mergerStartBtn.disabled = true;
+  elements.mergerProgressCard.classList.remove('hidden');
+  updateMergerProgress(0, state.mergerFiles.length, 'Memulai penggabungan dokumen...');
+
+  elements.mergerProgressCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  try {
+    const { PDFDocument, PageSizes } = await getPdfLib();
+    const mergedPdf = await PDFDocument.create();
+
+    const pageSizeSetting = elements.mergerPageSize ? elements.mergerPageSize.value : 'auto';
+    const orientationSetting = elements.mergerOrientation ? elements.mergerOrientation.value : 'auto';
+    const marginSetting = elements.mergerMargin ? elements.mergerMargin.value : 'none';
+
+    // Margin in points (1mm = 2.83465 pt)
+    let marginPt = 0;
+    if (marginSetting === 'small') marginPt = 14.17; // 5mm
+    else if (marginSetting === 'normal') marginPt = 28.35; // 10mm
+
+    const totalFiles = state.mergerFiles.length;
+
+    for (let i = 0; i < totalFiles; i++) {
+      const item = state.mergerFiles[i];
+      updateMergerProgress(i, totalFiles, `Memproses (${i + 1}/${totalFiles}) ${item.name}...`);
+      await yieldToMainThread(10);
+
+      const arrayBuffer = await item.file.arrayBuffer();
+
+      if (item.type === 'pdf') {
+        // Merge PDF pages
+        const srcPdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+        const indices = srcPdf.getPageIndices();
+        const copiedPages = await mergedPdf.copyPages(srcPdf, indices);
+
+        copiedPages.forEach(page => {
+          mergedPdf.addPage(page);
+        });
+      } else {
+        // Embed Image
+        let embeddedImage = null;
+        const fileType = item.file.type.toLowerCase();
+
+        if (fileType === 'image/png' || item.name.toLowerCase().endsWith('.png')) {
+          embeddedImage = await mergedPdf.embedPng(arrayBuffer);
+        } else if (fileType === 'image/jpeg' || fileType === 'image/jpg' || /\.(jpe?g)$/i.test(item.name)) {
+          embeddedImage = await mergedPdf.embedJpg(arrayBuffer);
+        } else {
+          // WEBP / Other images: convert via Canvas to PNG ArrayBuffer
+          const pngArrayBuffer = await convertImageFileToPngArrayBuffer(item.file);
+          embeddedImage = await mergedPdf.embedPng(pngArrayBuffer);
+        }
+
+        const imgWidth = embeddedImage.width;
+        const imgHeight = embeddedImage.height;
+
+        let pageW = imgWidth;
+        let pageH = imgHeight;
+
+        // Custom Page Sizes
+        if (pageSizeSetting === 'a4') {
+          [pageW, pageH] = PageSizes.A4;
+        } else if (pageSizeSetting === 'letter') {
+          [pageW, pageH] = PageSizes.Letter;
+        } else if (pageSizeSetting === 'legal') {
+          [pageW, pageH] = PageSizes.Legal;
+        }
+
+        // Custom Orientation
+        if (orientationSetting === 'portrait' && pageW > pageH) {
+          [pageW, pageH] = [pageH, pageW];
+        } else if (orientationSetting === 'landscape' && pageH > pageW) {
+          [pageW, pageH] = [pageH, pageW];
+        }
+
+        const page = mergedPdf.addPage([pageW, pageH]);
+
+        // Draw image fit within printable area (considering margins)
+        const availW = Math.max(10, pageW - marginPt * 2);
+        const availH = Math.max(10, pageH - marginPt * 2);
+
+        const scaleRatio = Math.min(availW / imgWidth, availH / imgHeight, 1.0);
+        const drawW = imgWidth * scaleRatio;
+        const drawH = imgHeight * scaleRatio;
+
+        const posX = marginPt + (availW - drawW) / 2;
+        const posY = marginPt + (availH - drawH) / 2;
+
+        page.drawImage(embeddedImage, {
+          x: posX,
+          y: posY,
+          width: drawW,
+          height: drawH
+        });
+      }
+    }
+
+    updateMergerProgress(totalFiles, totalFiles, 'Menyusun berkas PDF akhir...');
+    await yieldToMainThread(10);
+
+    const mergedPdfBytes = await mergedPdf.save();
+    const pdfBlob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+    const downloadUrl = URL.createObjectURL(pdfBlob);
+
+    const firstItemName = state.mergerFiles[0].name.replace(/\.[^/.]+$/, '');
+    const outName = `${firstItemName}_merged.pdf`;
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = outName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+
+    showToast('Dokumen PDF berhasil digabungkan & diunduh!', 'success');
+  } catch (err) {
+    console.error('Error merging documents:', err);
+    showToast('Gagal menggabungkan dokumen. Pastikan berkas tidak terenkripsi.', 'error');
+  } finally {
+    state.isMerging = false;
+    elements.mergerStartBtn.disabled = false;
+    elements.mergerProgressCard.classList.add('hidden');
+  }
+}
+
+function updateMergerProgress(current, total, statusText) {
+  const percent = Math.round((current / total) * 100);
+  elements.mergerProgressFill.style.width = `${percent}%`;
+  elements.mergerProgressPercent.textContent = `${percent}%`;
+  elements.mergerProgressStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${statusText}`;
+}
+
+function convertImageFileToPngArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const blob = await (await fetch(dataUrl)).blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      resolve(arrayBuffer);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
+}
+
+// Helper Functions
 function parsePageRange(rangeStr, maxPages) {
   if (!rangeStr) {
     return Array.from({ length: maxPages }, (_, i) => i + 1);
@@ -950,7 +1312,6 @@ function parsePageRange(rangeStr, maxPages) {
   return Array.from(pages).sort((a, b) => a - b);
 }
 
-// Format Bytes
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -960,7 +1321,6 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// Toast Notifications
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;

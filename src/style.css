@@ -1158,6 +1158,195 @@ details[open] .faq-content {
   padding-top: 0.85rem;
 }
 
+/* App Nav Tabs */
+.app-nav-tabs {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(20, 20, 26, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 0.4rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.nav-tab:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active {
+  color: #ffffff;
+  background: var(--primary);
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+/* Merger Panel & Reorder List */
+.merger-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.merger-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.merger-header-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.merger-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.merger-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(24, 24, 32, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.merger-file-item:hover {
+  border-color: var(--border-hover);
+  background: rgba(28, 28, 38, 0.95);
+}
+
+.merger-item-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.merger-item-index {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: var(--primary-light);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.merger-item-icon {
+  font-size: 1.5rem;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.merger-item-icon.icon-image {
+  color: var(--primary);
+}
+
+.merger-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.merger-item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.merger-item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.merger-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.btn-move {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-move:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.btn-move:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-delete-item {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-delete-item:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.merger-settings-grid {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 /* Utilities & Accessibility */
 .hidden { display: none !important; }
 

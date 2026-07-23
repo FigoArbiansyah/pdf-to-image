@@ -127,180 +127,281 @@
     </header>
 
     <main class="app-main" id="main-content" role="main" tabindex="-1">
-      <!-- Upload Section -->
-      <section class="card upload-card" id="drop-zone" role="region" aria-label="Area Pengunggahan Berkas">
-        <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" aria-describedby="file-hint-text" />
-        <div class="upload-content" id="upload-prompt">
-          <div class="upload-icon-wrapper">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon" aria-hidden="true"></i>
-          </div>
-          <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
-          <p>atau <button type="button" class="btn btn-outline" id="browse-btn" aria-label="Jelajahi dan pilih berkas"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Berkas (PDF / Gambar)</button></p>
-          <span class="file-hint" id="file-hint-text">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban</span>
-        </div>
+      <!-- Mode Tabs Navigation -->
+      <nav class="app-nav-tabs" role="tablist" aria-label="Mode Aplikasi">
+        <button type="button" class="nav-tab active" id="tab-converter" role="tab" aria-selected="true" aria-controls="converter-section">
+          <i class="fa-solid fa-file-image" aria-hidden="true"></i> Konversi ke Gambar
+        </button>
+        <button type="button" class="nav-tab" id="tab-merger" role="tab" aria-selected="false" aria-controls="merger-section">
+          <i class="fa-solid fa-object-group" aria-hidden="true"></i> Gabung ke PDF (Merger)
+        </button>
+      </nav>
 
-        <!-- Selected File Info State -->
-        <div class="file-info-bar hidden" id="file-info" role="status" aria-live="polite">
-          <div class="file-details">
-            <div class="file-icon-box" id="file-icon-box">
-              <i class="fa-solid fa-file-pdf" id="file-type-icon" aria-hidden="true"></i>
+      <!-- TAB 1: Converter Section -->
+      <div class="tab-content" id="converter-section" role="tabpanel" aria-labelledby="tab-converter">
+        <!-- Upload Section -->
+        <section class="card upload-card" id="drop-zone" role="region" aria-label="Area Pengunggahan Berkas">
+          <input type="file" id="pdf-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas PDF atau gambar" aria-describedby="file-hint-text" />
+          <div class="upload-content" id="upload-prompt">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-cloud-arrow-up upload-icon" aria-hidden="true"></i>
             </div>
-            <div class="file-text">
-              <h4 id="file-name">document.pdf</h4>
-              <p><span id="file-size">0 MB</span> &bull; <span id="file-pages">0 Halaman</span></p>
-            </div>
-          </div>
-          <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File" aria-label="Ganti Berkas Terpilih">
-            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span>Ganti Berkas</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- Settings Panel (Enabled when PDF/Image is loaded) -->
-      <section class="card settings-card disabled" id="settings-panel" aria-label="Pengaturan Konversi">
-        <h3 class="section-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Konversi</h3>
-        
-        <div class="settings-grid">
-          <!-- Format Picker -->
-          <div class="setting-group">
-            <label class="setting-label">Format Gambar Target</label>
-            <div class="format-toggle" role="radiogroup" aria-label="Pilih format gambar target">
-              <input type="radio" name="format" id="fmt-png" value="png" checked />
-              <label for="fmt-png" class="format-btn">
-                <i class="fa-solid fa-file-image" aria-hidden="true"></i>
-                <span class="fmt-title">PNG</span>
-                <span class="fmt-desc">Lossless</span>
-              </label>
-
-              <input type="radio" name="format" id="fmt-jpg" value="jpg" />
-              <label for="fmt-jpg" class="format-btn">
-                <i class="fa-solid fa-image" aria-hidden="true"></i>
-                <span class="fmt-title">JPG</span>
-                <span class="fmt-desc">Kompresi Ringkas</span>
-              </label>
-
-              <input type="radio" name="format" id="fmt-webp" value="webp" />
-              <label for="fmt-webp" class="format-btn">
-                <i class="fa-solid fa-file-code" aria-hidden="true"></i>
-                <span class="fmt-title">WEBP</span>
-                <span class="fmt-desc">Web Modern</span>
-              </label>
-            </div>
+            <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="browse-btn" aria-label="Jelajahi dan pilih berkas"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Berkas (PDF / Gambar)</button></p>
+            <span class="file-hint" id="file-hint-text">Mendukung .PDF, .PNG, .JPG, .WEBP &bull; Berjalan 100% di peramban secara offline</span>
           </div>
 
-          <!-- Quality Slider (Shown when JPG or WEBP selected) -->
-          <div class="setting-group hidden" id="quality-group">
-            <div class="label-with-value">
-              <label class="setting-label" for="jpg-quality" id="quality-label">Kualitas Kompresi</label>
-              <span class="val-badge" id="quality-val">90%</span>
+          <!-- Selected File Info State -->
+          <div class="file-info-bar hidden" id="file-info" role="status" aria-live="polite">
+            <div class="file-details">
+              <div class="file-icon-box" id="file-icon-box">
+                <i class="fa-solid fa-file-pdf" id="file-type-icon" aria-hidden="true"></i>
+              </div>
+              <div class="file-text">
+                <h4 id="file-name">document.pdf</h4>
+                <p><span id="file-size">0 MB</span> &bull; <span id="file-pages">0 Halaman</span></p>
+              </div>
             </div>
-            <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" aria-label="Kualitas Kompresi Gambar" />
-            <div class="slider-labels">
-              <span>Ukuran Kecil</span>
-              <span>Kualitas Tinggi</span>
-            </div>
-          </div>
-
-          <!-- Render Scale / DPI -->
-          <div class="setting-group">
-            <label class="setting-label" for="scale-select">Resolusi / DPI Output</label>
-            <div class="select-wrapper">
-              <select id="scale-select" class="custom-select" aria-label="Resolusi atau DPI Gambar Output">
-                <option value="1">1x Standard (72 DPI - Cepat)</option>
-                <option value="1.5">1.5x Medium (108 DPI)</option>
-                <option value="2" selected>2x High Quality / HD (144 DPI - Direkomendasikan)</option>
-                <option value="3">3x Ultra HD (216 DPI - Tajam / Cetak)</option>
-              </select>
-              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
-            </div>
-          </div>
-
-          <!-- Canvas Background Filler -->
-          <div class="setting-group">
-            <label class="setting-label" for="bg-fill-select">Latar Belakang Canvas</label>
-            <div class="select-wrapper">
-              <select id="bg-fill-select" class="custom-select" aria-label="Warna latar belakang gambar output">
-                <option value="white" selected>Putih Clean (Default)</option>
-                <option value="transparent">Transparan (PNG/WEBP)</option>
-                <option value="black">Hitam Dark</option>
-              </select>
-              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
-            </div>
-          </div>
-
-          <!-- Image Color Mode -->
-          <div class="setting-group">
-            <label class="setting-label" for="color-mode-select">Mode Warna Gambar</label>
-            <div class="select-wrapper">
-              <select id="color-mode-select" class="custom-select" aria-label="Mode warna gambar hasil">
-                <option value="color" selected>Full Color (Asli)</option>
-                <option value="grayscale">Grayscale / Hitam-Putih Halus</option>
-                <option value="monochrome">Monokrom Teks Kontras Tinggi</option>
-              </select>
-              <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
-            </div>
-          </div>
-
-          <!-- Page Selection -->
-          <div class="setting-group">
-            <label class="setting-label" for="page-range-input">Halaman yang Dikonversi</label>
-            <div class="range-input-box">
-              <input type="text" id="page-range-input" class="custom-input" placeholder="Contoh: 1-5, 8, 11 (Kosongkan untuk semua)" aria-label="Rentang halaman yang dikonversi" />
-            </div>
-            <div class="preset-buttons" role="group" aria-label="Pintasan pilihan halaman">
-              <button type="button" class="btn btn-preset active" id="preset-all-btn">Semua</button>
-              <button type="button" class="btn btn-preset" id="preset-first5-btn">5 Hal Pertama</button>
-              <button type="button" class="btn btn-preset" id="preset-odd-btn">Halaman Ganjil</button>
-              <button type="button" class="btn btn-preset" id="preset-even-btn">Halaman Genap</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Button -->
-        <div class="action-bar">
-          <button type="button" class="btn btn-primary btn-large" id="convert-btn" aria-label="Mulai proses konversi">
-            <i class="fa-solid fa-bolt" aria-hidden="true"></i> Konversi Ke Gambar Sekarang
-          </button>
-        </div>
-      </section>
-
-      <!-- Progress Section -->
-      <section class="card progress-card hidden" id="progress-card" role="status" aria-live="polite">
-        <div class="progress-header">
-          <span class="progress-title" id="progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Memproses halaman PDF...</span>
-          <span class="progress-percent" id="progress-percent">0%</span>
-        </div>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" id="progress-fill"></div>
-        </div>
-      </section>
-
-      <!-- Results Gallery -->
-      <section class="card results-card hidden" id="results-card" aria-label="Hasil Konversi">
-        <div class="results-header">
-          <div class="results-title-group">
-            <h3><i class="fa-solid fa-images" aria-hidden="true"></i> Hasil Konversi (<span id="converted-count">0</span> Gambar)</h3>
-            <div class="selection-actions">
-              <button type="button" class="btn-text" id="select-all-btn"><i class="fa-regular fa-square-check" aria-hidden="true"></i> Pilih Semua</button>
-              <button type="button" class="btn-text" id="deselect-all-btn"><i class="fa-regular fa-square" aria-hidden="true"></i> Hapus Pilihan</button>
-            </div>
-          </div>
-
-          <div class="results-toolbar">
-            <div class="search-box">
-              <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
-              <input type="text" id="gallery-search" class="custom-input custom-input-small" placeholder="Cari halaman..." aria-label="Cari gambar hasil konversi" />
-            </div>
-            <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
-              <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
+            <button type="button" class="btn btn-secondary btn-small" id="change-file-btn" title="Ganti File" aria-label="Ganti Berkas Terpilih">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span>Ganti Berkas</span>
             </button>
           </div>
-        </div>
+        </section>
 
-        <div class="gallery-grid" id="gallery-grid">
-          <!-- Dynamically populated page cards -->
-        </div>
-      </section>
+        <!-- Settings Panel (Enabled when PDF/Image is loaded) -->
+        <section class="card settings-card disabled" id="settings-panel" aria-label="Pengaturan Konversi">
+          <h3 class="section-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Konversi</h3>
+          
+          <div class="settings-grid">
+            <!-- Format Picker -->
+            <div class="setting-group">
+              <label class="setting-label">Format Gambar Target</label>
+              <div class="format-toggle" role="radiogroup" aria-label="Pilih format gambar target">
+                <input type="radio" name="format" id="fmt-png" value="png" checked />
+                <label for="fmt-png" class="format-btn">
+                  <i class="fa-solid fa-file-image" aria-hidden="true"></i>
+                  <span class="fmt-title">PNG</span>
+                  <span class="fmt-desc">Lossless & Transparan</span>
+                </label>
+
+                <input type="radio" name="format" id="fmt-jpg" value="jpg" />
+                <label for="fmt-jpg" class="format-btn">
+                  <i class="fa-solid fa-image" aria-hidden="true"></i>
+                  <span class="fmt-title">JPG</span>
+                  <span class="fmt-desc">Kompresi Ringkas</span>
+                </label>
+
+                <input type="radio" name="format" id="fmt-webp" value="webp" />
+                <label for="fmt-webp" class="format-btn">
+                  <i class="fa-solid fa-file-code" aria-hidden="true"></i>
+                  <span class="fmt-title">WEBP</span>
+                  <span class="fmt-desc">Web Modern</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Quality Slider (Shown when JPG or WEBP selected) -->
+            <div class="setting-group hidden" id="quality-group">
+              <div class="label-with-value">
+                <label class="setting-label" for="jpg-quality" id="quality-label">Kualitas Kompresi</label>
+                <span class="val-badge" id="quality-val">90%</span>
+              </div>
+              <input type="range" id="jpg-quality" min="10" max="100" value="90" step="5" class="slider" aria-label="Kualitas Kompresi Gambar" />
+              <div class="slider-labels">
+                <span>Ukuran Kecil</span>
+                <span>Kualitas Tinggi</span>
+              </div>
+            </div>
+
+            <!-- Render Scale / DPI -->
+            <div class="setting-group">
+              <label class="setting-label" for="scale-select">Resolusi / DPI Output</label>
+              <div class="select-wrapper">
+                <select id="scale-select" class="custom-select" aria-label="Resolusi atau DPI Gambar Output">
+                  <option value="1">1x Standard (72 DPI - Cepat)</option>
+                  <option value="1.5">1.5x Medium (108 DPI)</option>
+                  <option value="2" selected>2x High Quality / HD (144 DPI - Direkomendasikan)</option>
+                  <option value="3">3x Ultra HD (216 DPI - Tajam / Cetak)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Canvas Background Filler -->
+            <div class="setting-group">
+              <label class="setting-label" for="bg-fill-select">Latar Belakang Canvas</label>
+              <div class="select-wrapper">
+                <select id="bg-fill-select" class="custom-select" aria-label="Warna latar belakang gambar output">
+                  <option value="white" selected>Putih Clean (Default)</option>
+                  <option value="transparent">Transparan (PNG/WEBP)</option>
+                  <option value="black">Hitam Dark</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Image Color Mode -->
+            <div class="setting-group">
+              <label class="setting-label" for="color-mode-select">Mode Warna Gambar</label>
+              <div class="select-wrapper">
+                <select id="color-mode-select" class="custom-select" aria-label="Mode warna gambar hasil">
+                  <option value="color" selected>Full Color (Asli)</option>
+                  <option value="grayscale">Grayscale / Hitam-Putih Halus</option>
+                  <option value="monochrome">Monokrom Teks Kontras Tinggi</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <!-- Page Selection -->
+            <div class="setting-group setting-group-wide">
+              <label class="setting-label" for="page-range-input">Halaman yang Dikonversi</label>
+              <div class="range-input-box">
+                <input type="text" id="page-range-input" class="custom-input" placeholder="Contoh: 1-5, 8, 11 (Kosongkan untuk semua)" aria-label="Rentang halaman yang dikonversi" />
+              </div>
+              <div class="preset-buttons" role="group" aria-label="Pintasan pilihan halaman">
+                <button type="button" class="btn btn-preset active" id="preset-all-btn">Semua</button>
+                <button type="button" class="btn btn-preset" id="preset-first5-btn">5 Hal Pertama</button>
+                <button type="button" class="btn btn-preset" id="preset-odd-btn">Halaman Ganjil</button>
+                <button type="button" class="btn btn-preset" id="preset-even-btn">Halaman Genap</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="action-bar">
+            <button type="button" class="btn btn-primary btn-large" id="convert-btn" aria-label="Mulai proses konversi">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i> Konversi Ke Gambar Sekarang
+            </button>
+          </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="card progress-card hidden" id="progress-card" role="status" aria-live="polite">
+          <div class="progress-header">
+            <span class="progress-title" id="progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Memproses halaman PDF...</span>
+            <span class="progress-percent" id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+        </section>
+
+        <!-- Results Gallery -->
+        <section class="card results-card hidden" id="results-card" aria-label="Hasil Konversi">
+          <div class="results-header">
+            <div class="results-title-group">
+              <h3><i class="fa-solid fa-images" aria-hidden="true"></i> Hasil Konversi (<span id="converted-count">0</span> Gambar)</h3>
+              <div class="selection-actions">
+                <button type="button" class="btn-text" id="select-all-btn"><i class="fa-regular fa-square-check" aria-hidden="true"></i> Pilih Semua</button>
+                <button type="button" class="btn-text" id="deselect-all-btn"><i class="fa-regular fa-square" aria-hidden="true"></i> Hapus Pilihan</button>
+              </div>
+            </div>
+
+            <div class="results-toolbar">
+              <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+                <input type="text" id="gallery-search" class="custom-input custom-input-small" placeholder="Cari halaman..." aria-label="Cari gambar hasil konversi" />
+              </div>
+              <button type="button" class="btn btn-success" id="download-zip-btn" aria-label="Unduh gambar terpilih sebagai file ZIP">
+                <i class="fa-solid fa-file-zipper" aria-hidden="true"></i> Unduh ZIP (<span id="zip-count">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <div class="gallery-grid" id="gallery-grid">
+            <!-- Dynamically populated page cards -->
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 2: Merger Section -->
+      <div class="tab-content hidden" id="merger-section" role="tabpanel" aria-labelledby="tab-merger">
+        <!-- Merger Upload Section -->
+        <section class="card upload-card" id="merger-drop-zone" role="region" aria-label="Area Pengunggahan Berkas Merger">
+          <input type="file" id="merger-file-input" accept="application/pdf, image/png, image/jpeg, image/webp" multiple hidden aria-label="Pilih berkas untuk digabungkan" />
+          <div class="upload-content">
+            <div class="upload-icon-wrapper">
+              <i class="fa-solid fa-file-circle-plus upload-icon" aria-hidden="true"></i>
+            </div>
+            <h3>Tarik &amp; Lepaskan Berkas PDF atau Gambar di Sini</h3>
+            <p>atau <button type="button" class="btn btn-outline" id="merger-browse-btn"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Pilih Banyak Berkas (PDF / PNG / JPG / WEBP)</button></p>
+            <span class="file-hint">Gabungkan PDF + JPG + PNG + WEBP menjadi 1 Berkas PDF &bull; Pemrosesan 100% Lokal</span>
+          </div>
+        </section>
+
+        <!-- Merger Files Panel & Reordering -->
+        <section class="card merger-panel hidden" id="merger-panel" aria-label="Pengurutan Dokumen Merger">
+          <div class="merger-header-bar">
+            <h3 class="section-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Urutan Dokumen Dokumen (<span id="merger-file-count">0</span> Berkas)</h3>
+            <div class="merger-header-actions">
+              <button type="button" class="btn btn-small btn-outline" id="merger-add-more-btn"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah Berkas Lagi</button>
+              <button type="button" class="btn btn-small btn-secondary" id="merger-clear-all-btn"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Hapus Semua</button>
+            </div>
+          </div>
+
+          <div class="merger-file-list" id="merger-file-list">
+            <!-- Dynamically populated file item cards -->
+          </div>
+
+          <!-- Merger PDF Output Settings -->
+          <div class="settings-grid merger-settings-grid">
+            <div class="setting-group">
+              <label class="setting-label" for="merger-page-size">Ukuran Kertas PDF</label>
+              <div class="select-wrapper">
+                <select id="merger-page-size" class="custom-select" aria-label="Ukuran kertas PDF output">
+                  <option value="auto" selected>Otomatis / Sesuai Dokumen (Direkomendasikan)</option>
+                  <option value="a4">A4 Standard (210 x 297 mm)</option>
+                  <option value="letter">US Letter (8.5 x 11 in)</option>
+                  <option value="legal">US Legal (8.5 x 14 in)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="merger-orientation">Orientasi Halaman</label>
+              <div class="select-wrapper">
+                <select id="merger-orientation" class="custom-select" aria-label="Orientasi halaman PDF output">
+                  <option value="auto" selected>Otomatis (Ikuti Rasio Dokumen/Gambar)</option>
+                  <option value="portrait">Potret (Tegak)</option>
+                  <option value="landscape">Lansekap (Mendatar)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="merger-margin">Margin Halaman Gambar</label>
+              <div class="select-wrapper">
+                <select id="merger-margin" class="custom-select" aria-label="Margin Halaman PDF">
+                  <option value="none" selected>Tanpa Margin (Full Bleed - 0mm)</option>
+                  <option value="small">Sempit (5mm)</option>
+                  <option value="normal">Normal (10mm)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon" aria-hidden="true"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button type="button" class="btn btn-primary btn-large" id="merger-start-btn" aria-label="Gabungkan dokumen menjadi PDF">
+              <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Gabungkan &amp; Unduh Dokumen PDF
+            </button>
+          </div>
+        </section>
+
+        <!-- Merger Progress Section -->
+        <section class="card progress-card hidden" id="merger-progress-card" role="status" aria-live="polite">
+          <div class="progress-header">
+            <span class="progress-title" id="merger-progress-status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Menggabungkan dokumen...</span>
+            <span class="progress-percent" id="merger-progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="merger-progress-fill"></div>
+          </div>
+        </section>
+      </div>
 
       <!-- FAQ Accordion Section for SEO & User Guidance -->
       <section class="card faq-section" id="faq" aria-label="Pertanyaan Umum">
