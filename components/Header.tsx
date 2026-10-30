@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { ShieldCheck, Zap, Wand2 } from 'lucide-react';
+import { ShieldCheck, HardDrive, FileText } from 'lucide-react';
 
 export default function Header() {
   return (
@@ -10,41 +10,34 @@ export default function Header() {
             <Image
               src="/icon.png"
               alt="DocPressShot Studio Logo"
-              width={58}
-              height={58}
+              width={54}
+              height={54}
               priority
               className="brand-logo-img"
             />
           </div>
-          <span className="logo-glow-effect"></span>
         </div>
         <div className="brand-text">
           <div className="brand-badge-pill">
-            <span className="pulse-dot-indigo" aria-hidden="true"></span>
-            <span>WebAssembly Engine &bull; 100% Client-Side Privacy</span>
+            <span className="status-dot-active" aria-hidden="true"></span>
+            <span>100% Client-Side Sandbox &bull; Local Memory Only</span>
           </div>
           <div className="brand-title-group">
-            <h1 className="brand-title">
-              Doc<span className="highlight-press">Press</span>Shot
-            </h1>
-            <span className="brand-tag">
-              <Wand2 size={12} aria-hidden="true" /> Studio
-            </span>
+            <h1 className="brand-title">DocPressShot Studio</h1>
           </div>
           <p className="brand-subtitle">
-            Toolkit Pemrosesan PDF &amp; Gambar HD Instan Tanpa Server.
+            Toolkit utilitas PDF &amp; gambar presisi tinggi. Diproses langsung di perangkat Anda tanpa unggah server.
           </p>
         </div>
       </div>
       <div className="header-right">
-        <div className="privacy-badge" role="status">
-          <span className="pulse-dot" aria-hidden="true"></span>
-          <ShieldCheck size={16} aria-hidden="true" />
-          <span>100% Offline &amp; Privasi</span>
+        <div className="privacy-badge" role="status" title="Semua berkas tetap berada di RAM lokal peramban">
+          <ShieldCheck size={15} aria-hidden="true" />
+          <span>Privasi Lokal Terisolasi</span>
         </div>
-        <div className="speed-badge">
-          <Zap size={14} aria-hidden="true" />
-          <span>Proses Lokal</span>
+        <div className="speed-badge" title="Mesin WebAssembly & Worker lokal">
+          <HardDrive size={14} aria-hidden="true" />
+          <span>Zero Server Upload</span>
         </div>
       </div>
     </header>

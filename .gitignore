@@ -1,3 +1,5 @@
+.agents/
+
 # Next.js build output
 .next/
 out/

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FileImage,
   Layers,
@@ -15,9 +15,22 @@ import {
   Copy,
   ArrowUp,
   ArrowDown,
-  Sparkles,
   Loader2,
+  Archive,
+  CheckSquare,
+  Square,
+  Sparkles,
+  Info,
 } from 'lucide-react';
+
+interface ConvResultItem {
+  pageNum: number;
+  objectUrl: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  selected: boolean;
+}
 
 export default function StudioApp() {
   const [activeTab, setActiveTab] = useState<'converter' | 'merger' | 'splitter' | 'watermark' | 'ocr'>('converter');
@@ -35,43 +48,118 @@ export default function StudioApp() {
   const [convFile, setConvFile] = useState<File | null>(null);
   const [convFormat, setConvFormat] = useState<'png' | 'jpeg' | 'webp'>('png');
   const [convDpi, setConvDpi] = useState<number>(300);
-  const [convQuality, setConvQuality] = useState<number>(90);
+  const [convQuality, setConvQuality] = useState<number>(92);
   const [isConvProcessing, setIsConvProcessing] = useState(false);
   const [convProgress, setConvProgress] = useState(0);
-  const [convResults, setConvResults] = useState<Array<{ pageNum: number; dataUrl: string }>>([]);
+  const [convResults, setConvResults] = useState<ConvResultItem[]>([]);
+  const [isZipExporting, setIsZipExporting] = useState(false);
+  const [isDraggingConv, setIsDraggingConv] = useState(false);
 
   // --- MERGER STATE ---
   const [mergerFiles, setMergerFiles] = useState<File[]>([]);
   const [isMergerProcessing, setIsMergerProcessing] = useState(false);
+  const [isDraggingMerger, setIsDraggingMerger] = useState(false);
 
   // --- SPLITTER STATE ---
   const [splitFile, setSplitFile] = useState<File | null>(null);
+  const [splitTotalPages, setSplitTotalPages] = useState<number>(0);
   const [splitAction, setSplitAction] = useState<'extract' | 'delete' | 'zip'>('extract');
   const [splitPagesText, setSplitPagesText] = useState('');
   const [isSplitProcessing, setIsSplitProcessing] = useState(false);
+  const [isDraggingSplit, setIsDraggingSplit] = useState(false);
 
   // --- WATERMARK STATE ---
   const [wmFile, setWmFile] = useState<File | null>(null);
-  const [wmText, setWmText] = useState('CONFIDENTIAL');
-  const [wmColor, setWmColor] = useState('#ff0000');
-  const [wmOpacity, setWmOpacity] = useState(30);
+  const [wmText, setWmText] = useState('DOKUMEN RAHASIA');
+  const [wmColor, setWmColor] = useState('#2563eb');
+  const [wmOpacity, setWmOpacity] = useState(35);
   const [wmFontSize, setWmFontSize] = useState(48);
-  const [wmRotation, setWmRotation] = useState(-45);
+  const [wmRotation, setWmRotation] = useState(-35);
   const [isWmProcessing, setIsWmProcessing] = useState(false);
+  const [isDraggingWm, setIsDraggingWm] = useState(false);
+  const wmCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // --- OCR STATE ---
   const [ocrFile, setOcrFile] = useState<File | null>(null);
   const [ocrText, setOcrText] = useState('');
   const [isOcrRunning, setIsOcrRunning] = useState(false);
   const [ocrProgressText, setOcrProgressText] = useState('');
+  const [isDraggingOcr, setIsDraggingOcr] = useState(false);
+
+  // Clean up Object URLs to prevent memory leaks
+  const clearConvResults = () => {
+    convResults.forEach((item) => {
+      URL.revokeObjectURL(item.objectUrl);
+    });
+    setConvResults([]);
+  };
+
+  useEffect(() => {
+    return () => {
+      convResults.forEach((item) => URL.revokeObjectURL(item.objectUrl));
+    };
+  }, [convResults]);
+
+  // Global Clipboard Paste Support (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          if (activeTab === 'converter') {
+            clearConvResults();
+            setConvFile(file);
+            showToast(`Berkas ${file.name} ditempel dari clipboard.`, 'info');
+          } else if (activeTab === 'merger') {
+            setMergerFiles((prev) => [...prev, file]);
+            showToast(`Berkas ${file.name} ditambahkan ke daftar merger.`, 'info');
+          } else if (activeTab === 'splitter' && file.type === 'application/pdf') {
+            handleSplitFile(file);
+            showToast(`Berkas ${file.name} dipilih untuk dipisah.`, 'info');
+          } else if (activeTab === 'watermark' && file.type === 'application/pdf') {
+            setWmFile(file);
+            showToast(`Berkas ${file.name} dipilih untuk watermark.`, 'info');
+          } else if (activeTab === 'ocr') {
+            setOcrFile(file);
+            showToast(`Berkas ${file.name} dipilih untuk OCR.`, 'info');
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [activeTab]);
+
+  // Update Splitter Page Count when splitFile changes
+  const handleSplitFile = async (file: File) => {
+    setSplitFile(file);
+    try {
+      const { PDFDocument } = await import('pdf-lib');
+      const buffer = await file.arrayBuffer();
+      const doc = await PDFDocument.load(buffer);
+      setSplitTotalPages(doc.getPageCount());
+      setSplitPagesText(`1-${Math.min(3, doc.getPageCount())}`);
+    } catch (err) {
+      console.error(err);
+      setSplitTotalPages(0);
+    }
+  };
 
   // --- CONVERTER HANDLERS ---
   const handleConvFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      clearConvResults();
       setConvFile(file);
-      setConvResults([]);
-      showToast(`Berkas ${file.name} berhasil dimuat.`, 'info');
+      showToast(`Berkas ${file.name} siap dikonversi.`, 'info');
     }
   };
 
@@ -80,33 +168,68 @@ export default function StudioApp() {
       showToast('Pilih berkas PDF atau gambar terlebih dahulu.', 'error');
       return;
     }
+    clearConvResults();
     setIsConvProcessing(true);
-    setConvProgress(10);
+    setConvProgress(5);
+
     try {
       if (convFile.type.startsWith('image/')) {
+        // Image to Image recompression / conversion
+        const img = new Image();
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          const dataUrl = ev.target?.result as string;
-          setConvResults([{ pageNum: 1, dataUrl }]);
-          setConvProgress(100);
-          setIsConvProcessing(false);
-          showToast('Gambar berhasil diproses!', 'success');
+
+        reader.onload = () => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const mime = convFormat === 'jpeg' ? 'image/jpeg' : convFormat === 'webp' ? 'image/webp' : 'image/png';
+              canvas.toBlob(
+                (blob) => {
+                  if (blob) {
+                    const objectUrl = URL.createObjectURL(blob);
+                    setConvResults([
+                      {
+                        pageNum: 1,
+                        objectUrl,
+                        sizeBytes: blob.size,
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        selected: true,
+                      },
+                    ]);
+                    setConvProgress(100);
+                    setIsConvProcessing(false);
+                    showToast('Gambar berhasil diproses!', 'success');
+                  }
+                },
+                mime,
+                convQuality / 100
+              );
+            }
+          };
+          img.src = reader.result as string;
         };
         reader.readAsDataURL(convFile);
       } else {
+        // PDF conversion using local worker
         const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
         const arrayBuffer = await convFile.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdfDoc = await loadingTask.promise;
         const totalPages = pdfDoc.numPages;
-        const results: Array<{ pageNum: number; dataUrl: string }> = [];
+        const results: ConvResultItem[] = [];
 
         const scale = convDpi / 72;
+        const mime = convFormat === 'jpeg' ? 'image/jpeg' : convFormat === 'webp' ? 'image/webp' : 'image/png';
 
         for (let i = 1; i <= totalPages; i++) {
-          setConvProgress(Math.round((i / totalPages) * 90));
+          setConvProgress(Math.round((i / totalPages) * 92));
           const page = await pdfDoc.getPage(i);
           const viewport = page.getViewport({ scale });
           const canvas = document.createElement('canvas');
@@ -116,15 +239,29 @@ export default function StudioApp() {
 
           if (context) {
             await page.render({ canvasContext: context, viewport }).promise;
-            const mime = convFormat === 'jpeg' ? 'image/jpeg' : convFormat === 'webp' ? 'image/webp' : 'image/png';
-            const dataUrl = canvas.toDataURL(mime, convQuality / 100);
-            results.push({ pageNum: i, dataUrl });
+
+            const blob = await new Promise<Blob | null>((resolve) => {
+              canvas.toBlob(resolve, mime, convQuality / 100);
+            });
+
+            if (blob) {
+              const objectUrl = URL.createObjectURL(blob);
+              results.push({
+                pageNum: i,
+                objectUrl,
+                sizeBytes: blob.size,
+                width: Math.round(viewport.width),
+                height: Math.round(viewport.height),
+                selected: true,
+              });
+            }
           }
         }
+
         setConvResults(results);
         setConvProgress(100);
         setIsConvProcessing(false);
-        showToast(`Berhasil mengonversi ${totalPages} halaman PDF!`, 'success');
+        showToast(`Berhasil mengonversi ${results.length} halaman!`, 'success');
       }
     } catch (err: any) {
       console.error(err);
@@ -133,12 +270,59 @@ export default function StudioApp() {
     }
   };
 
+  // Batch ZIP Download
+  const downloadBatchZip = async (onlySelected: boolean = true) => {
+    const targets = onlySelected ? convResults.filter((r) => r.selected) : convResults;
+    if (targets.length === 0) {
+      showToast('Pilih minimal satu halaman untuk diunduh.', 'error');
+      return;
+    }
+
+    setIsZipExporting(true);
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      for (const item of targets) {
+        const response = await fetch(item.objectUrl);
+        const blob = await response.blob();
+        const ext = convFormat === 'jpeg' ? 'jpg' : convFormat;
+        zip.file(`halaman-${String(item.pageNum).padStart(3, '0')}.${ext}`, blob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      const baseName = convFile ? convFile.name.replace(/\.[^/.]+$/, '') : 'dokumen';
+      link.download = `${baseName}-${convDpi}dpi.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      setIsZipExporting(false);
+      showToast(`Arsip ZIP berisi ${targets.length} halaman siap diunduh!`, 'success');
+    } catch (err) {
+      console.error(err);
+      setIsZipExporting(false);
+      showToast('Gagal membuat arsip ZIP.', 'error');
+    }
+  };
+
+  const toggleSelectAll = (select: boolean) => {
+    setConvResults((prev) => prev.map((item) => ({ ...item, selected: select })));
+  };
+
+  const togglePageSelection = (pageNum: number) => {
+    setConvResults((prev) =>
+      prev.map((item) => (item.pageNum === pageNum ? { ...item, selected: !item.selected } : item))
+    );
+  };
+
   // --- MERGER HANDLERS ---
   const handleMergerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const added = Array.from(e.target.files);
       setMergerFiles((prev) => [...prev, ...added]);
-      showToast(`${added.length} berkas ditambahkan ke daftar merger.`, 'info');
+      showToast(`${added.length} berkas ditambahkan ke antrean merger.`, 'info');
     }
   };
 
@@ -159,7 +343,7 @@ export default function StudioApp() {
 
   const startMerger = async () => {
     if (mergerFiles.length < 2) {
-      showToast('Minimal tambahkan 2 berkas untuk digabungkan.', 'error');
+      showToast('Tambahkan minimal 2 berkas untuk digabungkan.', 'error');
       return;
     }
     setIsMergerProcessing(true);
@@ -169,7 +353,7 @@ export default function StudioApp() {
 
       for (const file of mergerFiles) {
         const buffer = await file.arrayBuffer();
-        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
           const doc = await PDFDocument.load(buffer);
           const copiedPages = await mergedPdf.copyPages(doc, doc.getPageIndices());
           copiedPages.forEach((p) => mergedPdf.addPage(p));
@@ -189,14 +373,16 @@ export default function StudioApp() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `docpressshot-merged-${Date.now()}.pdf`;
+      link.download = `gabungan-${Date.now()}.pdf`;
       link.click();
+      URL.revokeObjectURL(link.href);
+
       setIsMergerProcessing(false);
-      showToast('Dokumen PDF berhasil digabungkan!', 'success');
+      showToast('Dokumen berhasil digabungkan!', 'success');
     } catch (err: any) {
       console.error(err);
       setIsMergerProcessing(false);
-      showToast('Gagal menggabungkan berkas dokumen.', 'error');
+      showToast('Gagal menggabungkan dokumen.', 'error');
     }
   };
 
@@ -222,7 +408,7 @@ export default function StudioApp() {
           const [page] = await newDoc.copyPages(doc, [i]);
           newDoc.addPage(page);
           const pdfBytes = await newDoc.save();
-          zip.file(`halaman-${i + 1}.pdf`, pdfBytes);
+          zip.file(`halaman-${String(i + 1).padStart(3, '0')}.pdf`, pdfBytes);
         }
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -230,40 +416,59 @@ export default function StudioApp() {
         link.href = URL.createObjectURL(zipBlob);
         link.download = `${splitFile.name.replace('.pdf', '')}-halaman-terpisah.zip`;
         link.click();
-        showToast('Semua halaman berhasil dipisah ke dalam file ZIP!', 'success');
+        URL.revokeObjectURL(link.href);
+        showToast('Seluruh halaman berhasil diekspor ke ZIP!', 'success');
       } else {
-        const pagesToExtract = splitPagesText
-          .split(',')
-          .map((p) => parseInt(p.trim()) - 1)
-          .filter((p) => !isNaN(p) && p >= 0 && p < totalPages);
+        // Parse range input e.g. "1-3, 5, 7-9"
+        const parsedIndices = new Set<number>();
+        const parts = splitPagesText.split(',').map((s) => s.trim());
 
-        if (pagesToExtract.length === 0) {
-          showToast('Masukkan nomor halaman yang valid.', 'error');
+        for (const part of parts) {
+          if (part.includes('-')) {
+            const [startStr, endStr] = part.split('-');
+            const start = parseInt(startStr, 10);
+            const end = parseInt(endStr, 10);
+            if (!isNaN(start) && !isNaN(end)) {
+              for (let k = Math.min(start, end); k <= Math.max(start, end); k++) {
+                if (k >= 1 && k <= totalPages) parsedIndices.add(k - 1);
+              }
+            }
+          } else {
+            const pageNum = parseInt(part, 10);
+            if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+              parsedIndices.add(pageNum - 1);
+            }
+          }
+        }
+
+        let targetIndices = Array.from(parsedIndices).sort((a, b) => a - b);
+        if (splitAction === 'delete') {
+          targetIndices = doc.getPageIndices().filter((idx) => !parsedIndices.has(idx));
+        }
+
+        if (targetIndices.length === 0) {
+          showToast('Masukkan nomor atau rentang halaman yang valid (contoh: 1-3, 5).', 'error');
           setIsSplitProcessing(false);
           return;
         }
 
         const newDoc = await PDFDocument.create();
-        let targetIndices = pagesToExtract;
-        if (splitAction === 'delete') {
-          targetIndices = doc.getPageIndices().filter((idx) => !pagesToExtract.includes(idx));
-        }
-
         const copiedPages = await newDoc.copyPages(doc, targetIndices);
         copiedPages.forEach((p) => newDoc.addPage(p));
         const pdfBytes = await newDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `docpressshot-split-${Date.now()}.pdf`;
+        link.download = `${splitFile.name.replace('.pdf', '')}-${splitAction}-${Date.now()}.pdf`;
         link.click();
-        showToast('Dokumen PDF berhasil diproses!', 'success');
+        URL.revokeObjectURL(link.href);
+        showToast('Dokumen berhasil diproses!', 'success');
       }
       setIsSplitProcessing(false);
     } catch (err: any) {
       console.error(err);
       setIsSplitProcessing(false);
-      showToast('Gagal memisah dokumen PDF.', 'error');
+      showToast('Gagal memproses dokumen PDF.', 'error');
     }
   };
 
@@ -275,26 +480,31 @@ export default function StudioApp() {
     }
     setIsWmProcessing(true);
     try {
-      const { PDFDocument, rgb, degrees } = await import('pdf-lib');
+      const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib');
       const buffer = await wmFile.arrayBuffer();
       const doc = await PDFDocument.load(buffer);
+      const font = await doc.embedFont(StandardFonts.HelveticaBold);
       const pages = doc.getPages();
 
       const hexToRgb = (hex: string) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result
           ? { r: parseInt(result[1], 16) / 255, g: parseInt(result[2], 16) / 255, b: parseInt(result[3], 16) / 255 }
-          : { r: 1, g: 0, b: 0 };
+          : { r: 0.15, g: 0.39, b: 0.92 };
       };
 
       const c = hexToRgb(wmColor);
 
       pages.forEach((page) => {
         const { width, height } = page.getSize();
+        const textWidth = font.widthOfTextAtSize(wmText, wmFontSize);
+        const textHeight = font.heightAtSize(wmFontSize);
+
         page.drawText(wmText, {
-          x: width / 4,
-          y: height / 2,
+          x: (width - textWidth) / 2,
+          y: (height - textHeight) / 2,
           size: wmFontSize,
+          font,
           color: rgb(c.r, c.g, c.b),
           opacity: wmOpacity / 100,
           rotate: degrees(wmRotation),
@@ -305,14 +515,16 @@ export default function StudioApp() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `docpressshot-watermarked-${Date.now()}.pdf`;
+      link.download = `${wmFile.name.replace('.pdf', '')}-watermarked.pdf`;
       link.click();
+      URL.revokeObjectURL(link.href);
+
       setIsWmProcessing(false);
-      showToast('Watermark berhasil ditambahkan ke PDF!', 'success');
+      showToast('Watermark berhasil diterapkan ke setiap halaman!', 'success');
     } catch (err: any) {
       console.error(err);
       setIsWmProcessing(false);
-      showToast('Gagal menambahkan watermark.', 'error');
+      showToast('Gagal menerapkan watermark.', 'error');
     }
   };
 
@@ -323,16 +535,40 @@ export default function StudioApp() {
       return;
     }
     setIsOcrRunning(true);
-    setOcrProgressText('Menyiapkan mesin OCR...');
+    setOcrProgressText('Memulai mesin pengenalan karakter...');
     try {
+      let imageTarget: Blob | File = ocrFile;
+
+      // If PDF, render first page to canvas first for Tesseract
+      if (ocrFile.type === 'application/pdf' || ocrFile.name.toLowerCase().endsWith('.pdf')) {
+        setOcrProgressText('Merasterisasi halaman PDF ke kanvas gambar...');
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+        const buffer = await ocrFile.arrayBuffer();
+        const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const page = await doc.getPage(1);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+          if (blob) imageTarget = blob;
+        }
+      }
+
+      setOcrProgressText('Memuat model OCR (Bahasa Indonesia & Inggris)...');
       const { createWorker } = await import('tesseract.js');
       const worker = await createWorker('ind+eng');
-      setOcrProgressText('Mengekstrak teks dari dokumen...');
-      const ret = await worker.recognize(ocrFile);
+      setOcrProgressText('Menganalisis teks dokumen...');
+      const ret = await worker.recognize(imageTarget);
       setOcrText(ret.data.text);
       await worker.terminate();
       setIsOcrRunning(false);
-      showToast('Teks berhasil diekstrak dengan OCR!', 'success');
+      showToast('Teks berhasil diekstrak!', 'success');
     } catch (err: any) {
       console.error(err);
       setIsOcrRunning(false);
@@ -340,11 +576,14 @@ export default function StudioApp() {
     }
   };
 
+  const selectedCount = convResults.filter((r) => r.selected).length;
+  const totalSizeBytes = convResults.reduce((acc, curr) => acc + (curr.selected ? curr.sizeBytes : 0), 0);
+
   return (
     <main className="app-main" id="main-content" tabIndex={-1}>
       {/* Toast Notification */}
       {toast && (
-        <div className="toast-container">
+        <div className="toast-container" role="status" aria-live="polite">
           <div className={`toast toast-${toast.type}`}>
             <span>{toast.message}</span>
           </div>
@@ -352,7 +591,7 @@ export default function StudioApp() {
       )}
 
       {/* Segmented Control Nav Tabs */}
-      <nav className="app-nav-tabs" role="tablist" aria-label="Mode Aplikasi">
+      <nav className="app-nav-tabs" role="tablist" aria-label="Alat Studio">
         <button
           type="button"
           className={`nav-tab ${activeTab === 'converter' ? 'active' : ''}`}
@@ -360,7 +599,8 @@ export default function StudioApp() {
           role="tab"
           aria-selected={activeTab === 'converter'}
         >
-          <FileImage size={18} aria-hidden="true" /> Konversi Gambar
+          <FileImage size={17} aria-hidden="true" />
+          <span>Konversi Gambar</span>
         </button>
         <button
           type="button"
@@ -369,7 +609,8 @@ export default function StudioApp() {
           role="tab"
           aria-selected={activeTab === 'merger'}
         >
-          <Layers size={18} aria-hidden="true" /> Gabung PDF
+          <Layers size={17} aria-hidden="true" />
+          <span>Gabung PDF</span>
         </button>
         <button
           type="button"
@@ -378,7 +619,8 @@ export default function StudioApp() {
           role="tab"
           aria-selected={activeTab === 'splitter'}
         >
-          <Scissors size={18} aria-hidden="true" /> Pisah PDF
+          <Scissors size={17} aria-hidden="true" />
+          <span>Pisah PDF</span>
         </button>
         <button
           type="button"
@@ -387,7 +629,8 @@ export default function StudioApp() {
           role="tab"
           aria-selected={activeTab === 'watermark'}
         >
-          <Stamp size={18} aria-hidden="true" /> Watermark PDF
+          <Stamp size={17} aria-hidden="true" />
+          <span>Watermark</span>
         </button>
         <button
           type="button"
@@ -396,14 +639,31 @@ export default function StudioApp() {
           role="tab"
           aria-selected={activeTab === 'ocr'}
         >
-          <FileText size={18} aria-hidden="true" /> Ekstrak Teks (OCR)
+          <FileText size={17} aria-hidden="true" />
+          <span>Ekstrak OCR</span>
         </button>
       </nav>
 
       {/* TAB 1: CONVERTER */}
       {activeTab === 'converter' && (
         <div className="tab-content">
-          <section className="card upload-card">
+          <section
+            className={`card upload-card ${isDraggingConv ? 'drag-over' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingConv(true);
+            }}
+            onDragLeave={() => setIsDraggingConv(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingConv(false);
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                clearConvResults();
+                setConvFile(e.dataTransfer.files[0]);
+                showToast(`Berkas ${e.dataTransfer.files[0].name} siap diproses.`, 'info');
+              }
+            }}
+          >
             <input
               type="file"
               id="pdf-input"
@@ -413,11 +673,11 @@ export default function StudioApp() {
             />
             <label htmlFor="pdf-input" className="upload-content">
               <div className="upload-icon-wrapper">
-                <Upload className="upload-icon" size={32} />
+                <Upload className="upload-icon" size={28} />
               </div>
-              <h3>Tarik &amp; Lepaskan File PDF atau Gambar di Sini</h3>
-              <p>atau klik untuk memilih berkas dari komputer</p>
-              <span className="file-hint">Mendukung: PDF, PNG, JPG, WEBP</span>
+              <h3>Pilih atau Jatuhkan Berkas PDF / Gambar</h3>
+              <p>Mendukung format PDF, PNG, JPG, dan WebP (Bisa tekan Ctrl+V untuk menempel)</p>
+              <span className="file-hint">Pemrosesan lokal di RAM peramban &bull; Privasi terjamin</span>
             </label>
           </section>
 
@@ -425,24 +685,34 @@ export default function StudioApp() {
             <div className="file-info-bar">
               <div className="file-details">
                 <div className="file-icon-box">
-                  <FileImage size={24} />
+                  <FileImage size={22} />
                 </div>
                 <div className="file-text">
                   <h4>{convFile.name}</h4>
-                  <p>{(convFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <p>{(convFile.size / 1024 / 1024).toFixed(2)} MB &bull; Siap diekstrak</p>
                 </div>
               </div>
-              <button type="button" className="btn btn-secondary btn-small" onClick={() => setConvFile(null)}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={() => {
+                  clearConvResults();
+                  setConvFile(null);
+                }}
+              >
                 <RotateCcw size={14} /> Ganti Berkas
               </button>
             </div>
           )}
 
           <section className="card settings-panel">
-            <h3 className="section-title">Pengaturan Hasil Konversi</h3>
+            <h3 className="section-title">
+              <FileImage size={18} />
+              <span>Konfigurasi Rasterisasi Gambar</span>
+            </h3>
             <div className="settings-grid">
               <div className="setting-group">
-                <label className="setting-label">Format Output</label>
+                <label className="setting-label">Format Gambar Output</label>
                 <div className="format-toggle">
                   {(['png', 'jpeg', 'webp'] as const).map((fmt) => (
                     <label key={fmt} className="format-btn">
@@ -453,6 +723,7 @@ export default function StudioApp() {
                         onChange={() => setConvFormat(fmt)}
                       />
                       <span className="fmt-title">{fmt.toUpperCase()}</span>
+                      <span className="fmt-desc">{fmt === 'png' ? 'Tanpa Rugi (Lossless)' : fmt === 'jpeg' ? 'Ukuran Ringkas' : 'Modern & Hemat'}</span>
                     </label>
                   ))}
                 </div>
@@ -460,7 +731,7 @@ export default function StudioApp() {
 
               <div className="setting-group">
                 <label className="setting-label label-with-value">
-                  <span>Resolusi (DPI)</span>
+                  <span>Resolusi Render (DPI)</span>
                   <span className="val-badge">{convDpi} DPI</span>
                 </label>
                 <select
@@ -468,11 +739,29 @@ export default function StudioApp() {
                   value={convDpi}
                   onChange={(e) => setConvDpi(Number(e.target.value))}
                 >
-                  <option value={150}>150 DPI (Standar)</option>
-                  <option value={300}>300 DPI (Tinggi - HD)</option>
-                  <option value={600}>600 DPI (Ultra HD / Cetak)</option>
+                  <option value={72}>72 DPI (Layar / Pratinjau Cepat)</option>
+                  <option value={150}>150 DPI (Standar Berimbang)</option>
+                  <option value={300}>300 DPI (Kualitas Tinggi - HD)</option>
+                  <option value={600}>600 DPI (Ultra HD / Keperluan Cetak)</option>
                 </select>
               </div>
+
+              {convFormat !== 'png' && (
+                <div className="setting-group setting-group-wide">
+                  <label className="setting-label label-with-value">
+                    <span>Kompresi Kualitas</span>
+                    <span className="val-badge">{convQuality}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    className="slider"
+                    min="40"
+                    max="100"
+                    value={convQuality}
+                    onChange={(e) => setConvQuality(Number(e.target.value))}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="action-bar">
@@ -482,8 +771,8 @@ export default function StudioApp() {
                 onClick={startConversion}
                 disabled={!convFile || isConvProcessing}
               >
-                {isConvProcessing ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} />}
-                {isConvProcessing ? `Memproses ${convProgress}%` : 'Mulai Konversi Gambar'}
+                {isConvProcessing ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
+                {isConvProcessing ? `Merasterisasi ${convProgress}%...` : 'Ekstrak Gambar dari Dokumen'}
               </button>
             </div>
           </section>
@@ -492,20 +781,77 @@ export default function StudioApp() {
           {convResults.length > 0 && (
             <section className="card results-gallery">
               <div className="results-header">
-                <h3>Hasil Halaman ({convResults.length})</h3>
+                <div className="results-title-group">
+                  <h3>
+                    <span>Halaman Hasil Konversi ({convResults.length})</span>
+                    <span className="val-badge font-mono">
+                      {selectedCount} Terpilih &bull; {(totalSizeBytes / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </h3>
+                  <div className="selection-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => toggleSelectAll(true)}
+                    >
+                      <CheckSquare size={14} /> Pilih Semua
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => toggleSelectAll(false)}
+                    >
+                      <Square size={14} /> Batal Pilih
+                    </button>
+                  </div>
+                </div>
+
+                <div className="results-toolbar">
+                  <button
+                    type="button"
+                    className="btn btn-success btn-small"
+                    onClick={() => downloadBatchZip(true)}
+                    disabled={isZipExporting || selectedCount === 0}
+                  >
+                    {isZipExporting ? <Loader2 className="animate-spin" size={14} /> : <Archive size={14} />}
+                    {isZipExporting ? 'Membuat ZIP...' : `Unduh Semua ZIP (${selectedCount})`}
+                  </button>
+                </div>
               </div>
+
               <div className="gallery-grid">
                 {convResults.map((item) => (
-                  <div key={item.pageNum} className="page-card">
+                  <div key={item.pageNum} className={`page-card ${item.selected ? 'selected' : ''}`}>
                     <div className="card-top-bar">
-                      <span>Halaman {item.pageNum}</span>
+                      <label className="card-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={item.selected}
+                          onChange={() => togglePageSelection(item.pageNum)}
+                        />
+                        <span>Hal {item.pageNum}</span>
+                      </label>
+                      <span className="badge-dim font-mono">{(item.sizeBytes / 1024).toFixed(0)} KB</span>
                     </div>
-                    <div className="card-image-wrap">
-                      <img src={item.dataUrl} alt={`Halaman ${item.pageNum}`} />
+
+                    <div
+                      className="card-image-wrap"
+                      onClick={() => togglePageSelection(item.pageNum)}
+                      title="Klik untuk memilih/batalkan halaman"
+                    >
+                      <img src={item.objectUrl} alt={`Halaman ${item.pageNum}`} loading="lazy" />
                     </div>
+
                     <div className="card-bottom-bar">
-                      <a href={item.dataUrl} download={`halaman-${item.pageNum}.${convFormat}`} className="btn btn-primary btn-small">
-                        <Download size={14} /> Unduh
+                      <span className="text-xs text-[var(--text-dim)] font-mono">
+                        {item.width}×{item.height}
+                      </span>
+                      <a
+                        href={item.objectUrl}
+                        download={`halaman-${String(item.pageNum).padStart(3, '0')}.${convFormat === 'jpeg' ? 'jpg' : convFormat}`}
+                        className="btn btn-primary btn-small"
+                      >
+                        <Download size={13} /> Unduh
                       </a>
                     </div>
                   </div>
@@ -519,7 +865,23 @@ export default function StudioApp() {
       {/* TAB 2: MERGER */}
       {activeTab === 'merger' && (
         <div className="tab-content">
-          <section className="card upload-card">
+          <section
+            className={`card upload-card ${isDraggingMerger ? 'drag-over' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingMerger(true);
+            }}
+            onDragLeave={() => setIsDraggingMerger(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingMerger(false);
+              if (e.dataTransfer.files) {
+                const added = Array.from(e.dataTransfer.files);
+                setMergerFiles((prev) => [...prev, ...added]);
+                showToast(`${added.length} berkas ditambahkan ke antrean.`, 'info');
+              }
+            }}
+          >
             <input
               type="file"
               id="merger-input"
@@ -530,17 +892,31 @@ export default function StudioApp() {
             />
             <label htmlFor="merger-input" className="upload-content">
               <div className="upload-icon-wrapper">
-                <Upload className="upload-icon" size={32} />
+                <Layers className="upload-icon" size={28} />
               </div>
-              <h3>Pilih Beberapa Berkas PDF / Gambar untuk Digabungkan</h3>
-              <p>Dukungan format: PDF, PNG, JPG, WEBP</p>
+              <h3>Pilih Beberapa Berkas PDF atau Gambar</h3>
+              <p>Gabungkan beberapa PDF atau gambar menjadi satu dokumen terpadu</p>
+              <span className="file-hint">Urutkan posisi halaman sebelum menggabungkan</span>
             </label>
           </section>
 
           {mergerFiles.length > 0 && (
             <section className="card">
-              <h3 className="section-title">Urutan Berkas Dokumen ({mergerFiles.length})</h3>
-              <div className="merger-file-list">
+              <div className="results-header">
+                <h3 className="section-title" style={{ margin: 0, padding: 0, border: 'none' }}>
+                  <Layers size={18} />
+                  <span>Antrean Dokumen ({mergerFiles.length} Berkas)</span>
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={() => setMergerFiles([])}
+                >
+                  <Trash2 size={14} /> Kosongkan Antrean
+                </button>
+              </div>
+
+              <div className="merger-file-list" style={{ marginTop: '1rem' }}>
                 {mergerFiles.map((file, idx) => (
                   <div key={idx} className="merger-file-item">
                     <div className="merger-item-main">
@@ -556,6 +932,7 @@ export default function StudioApp() {
                         className="btn-move"
                         onClick={() => moveMergerFile(idx, 'up')}
                         disabled={idx === 0}
+                        title="Geser ke atas"
                       >
                         <ArrowUp size={14} />
                       </button>
@@ -564,6 +941,7 @@ export default function StudioApp() {
                         className="btn-move"
                         onClick={() => moveMergerFile(idx, 'down')}
                         disabled={idx === mergerFiles.length - 1}
+                        title="Geser ke bawah"
                       >
                         <ArrowDown size={14} />
                       </button>
@@ -571,6 +949,7 @@ export default function StudioApp() {
                         type="button"
                         className="btn-delete-item"
                         onClick={() => removeMergerFile(idx)}
+                        title="Hapus dari antrean"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -586,8 +965,8 @@ export default function StudioApp() {
                   onClick={startMerger}
                   disabled={mergerFiles.length < 2 || isMergerProcessing}
                 >
-                  {isMergerProcessing ? <Loader2 className="animate-spin" size={20} /> : <Layers size={20} />}
-                  {isMergerProcessing ? 'Menggabungkan Dokumen...' : 'Gabungkan Menjadi 1 PDF'}
+                  {isMergerProcessing ? <Loader2 className="animate-spin" size={18} /> : <Layers size={18} />}
+                  {isMergerProcessing ? 'Menggabungkan Berkas...' : `Gabungkan Menjadi 1 PDF (${mergerFiles.length} Berkas)`}
                 </button>
               </div>
             </section>
@@ -598,27 +977,45 @@ export default function StudioApp() {
       {/* TAB 3: SPLITTER */}
       {activeTab === 'splitter' && (
         <div className="tab-content">
-          <section className="card upload-card">
+          <section
+            className={`card upload-card ${isDraggingSplit ? 'drag-over' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingSplit(true);
+            }}
+            onDragLeave={() => setIsDraggingSplit(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingSplit(false);
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleSplitFile(e.dataTransfer.files[0]);
+              }
+            }}
+          >
             <input
               type="file"
               id="split-input"
               accept="application/pdf"
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) setSplitFile(e.target.files[0]);
+                if (e.target.files && e.target.files[0]) handleSplitFile(e.target.files[0]);
               }}
               hidden
             />
             <label htmlFor="split-input" className="upload-content">
               <div className="upload-icon-wrapper">
-                <Scissors className="upload-icon" size={32} />
+                <Scissors className="upload-icon" size={28} />
               </div>
-              <h3>{splitFile ? splitFile.name : 'Pilih Berkas PDF yang Ingin Dipisah'}</h3>
+              <h3>{splitFile ? splitFile.name : 'Pilih Berkas PDF untuk Dipisahkan'}</h3>
+              <p>{splitFile ? `${splitTotalPages} total halaman terdeteksi` : 'Ekstrak rentang halaman, hapus halaman tertentu, atau pisah ke ZIP'}</p>
             </label>
           </section>
 
           {splitFile && (
             <section className="card">
-              <h3 className="section-title">Pengaturan Pemisahan</h3>
+              <h3 className="section-title">
+                <Scissors size={18} />
+                <span>Strategi Pemisahan Halaman</span>
+              </h3>
               <div className="settings-grid">
                 <div className="setting-group">
                   <label className="setting-label">Aksi Pemisahan</label>
@@ -627,18 +1024,22 @@ export default function StudioApp() {
                     value={splitAction}
                     onChange={(e) => setSplitAction(e.target.value as any)}
                   >
-                    <option value="extract">Ekstrak Halaman Pilihan ke 1 PDF Baru</option>
-                    <option value="delete">Hapus Halaman Pilihan dari PDF</option>
-                    <option value="zip">Pisahkan Semua Halaman ke ZIP</option>
+                    <option value="extract">Ekstrak Halaman Pilihan ke 1 Dokumen Baru</option>
+                    <option value="delete">Hapus Halaman Pilihan (Simpan Sisanya)</option>
+                    <option value="zip">Pisahkan Setiap Halaman Menjadi File Terpisah (.zip)</option>
                   </select>
                 </div>
+
                 {splitAction !== 'zip' && (
                   <div className="setting-group">
-                    <label className="setting-label">Nomor Halaman (Contoh: 1, 3, 5)</label>
+                    <label className="setting-label label-with-value">
+                      <span>Nomor / Rentang Halaman</span>
+                      <span className="val-badge font-mono">Total {splitTotalPages} Hal</span>
+                    </label>
                     <input
                       type="text"
-                      className="custom-input"
-                      placeholder="Masukkan nomor halaman..."
+                      className="custom-input font-mono"
+                      placeholder="Contoh: 1-3, 5, 8-10"
                       value={splitPagesText}
                       onChange={(e) => setSplitPagesText(e.target.value)}
                     />
@@ -653,8 +1054,8 @@ export default function StudioApp() {
                   onClick={startSplitter}
                   disabled={isSplitProcessing}
                 >
-                  {isSplitProcessing ? <Loader2 className="animate-spin" size={20} /> : <Scissors size={20} />}
-                  Proses Pemisahan PDF
+                  {isSplitProcessing ? <Loader2 className="animate-spin" size={18} /> : <Scissors size={18} />}
+                  {isSplitProcessing ? 'Memproses Dokumen...' : 'Eksekusi Pemisahan PDF'}
                 </button>
               </div>
             </section>
@@ -665,7 +1066,21 @@ export default function StudioApp() {
       {/* TAB 4: WATERMARK */}
       {activeTab === 'watermark' && (
         <div className="tab-content">
-          <section className="card upload-card">
+          <section
+            className={`card upload-card ${isDraggingWm ? 'drag-over' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingWm(true);
+            }}
+            onDragLeave={() => setIsDraggingWm(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingWm(false);
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                setWmFile(e.dataTransfer.files[0]);
+              }
+            }}
+          >
             <input
               type="file"
               id="wm-input"
@@ -677,15 +1092,19 @@ export default function StudioApp() {
             />
             <label htmlFor="wm-input" className="upload-content">
               <div className="upload-icon-wrapper">
-                <Stamp className="upload-icon" size={32} />
+                <Stamp className="upload-icon" size={28} />
               </div>
-              <h3>{wmFile ? wmFile.name : 'Pilih Berkas PDF untuk Watermark'}</h3>
+              <h3>{wmFile ? wmFile.name : 'Pilih Dokumen PDF untuk Diberi Cap / Watermark'}</h3>
+              <p>Tambahkan teks perlindungan dokumen ke seluruh halaman</p>
             </label>
           </section>
 
           {wmFile && (
             <section className="card">
-              <h3 className="section-title">Pengaturan Watermark</h3>
+              <h3 className="section-title">
+                <Stamp size={18} />
+                <span>Pengaturan Watermark Presisi</span>
+              </h3>
               <div className="settings-grid">
                 <div className="setting-group">
                   <label className="setting-label">Teks Watermark</label>
@@ -696,34 +1115,51 @@ export default function StudioApp() {
                     onChange={(e) => setWmText(e.target.value)}
                   />
                 </div>
+
                 <div className="setting-group">
-                  <label className="setting-label">Warna Watermark</label>
-                  <input
-                    type="color"
-                    className="custom-input"
-                    style={{ height: '44px', padding: '2px' }}
-                    value={wmColor}
-                    onChange={(e) => setWmColor(e.target.value)}
-                  />
+                  <label className="setting-label">Warna Teks</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="color"
+                      className="custom-input"
+                      style={{ width: '60px', height: '42px', padding: '2px', cursor: 'pointer' }}
+                      value={wmColor}
+                      onChange={(e) => setWmColor(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="custom-input font-mono"
+                      value={wmColor}
+                      onChange={(e) => setWmColor(e.target.value)}
+                    />
+                  </div>
                 </div>
+
                 <div className="setting-group">
-                  <label className="setting-label">Opasitas ({wmOpacity}%)</label>
+                  <label className="setting-label label-with-value">
+                    <span>Transparansi / Opasitas</span>
+                    <span className="val-badge">{wmOpacity}%</span>
+                  </label>
                   <input
                     type="range"
                     className="slider"
                     min="10"
-                    max="100"
+                    max="90"
                     value={wmOpacity}
                     onChange={(e) => setWmOpacity(Number(e.target.value))}
                   />
                 </div>
+
                 <div className="setting-group">
-                  <label className="setting-label">Ukuran Font ({wmFontSize}px)</label>
+                  <label className="setting-label label-with-value">
+                    <span>Ukuran Tipografi</span>
+                    <span className="val-badge">{wmFontSize} pt</span>
+                  </label>
                   <input
                     type="range"
                     className="slider"
-                    min="20"
-                    max="100"
+                    min="18"
+                    max="96"
                     value={wmFontSize}
                     onChange={(e) => setWmFontSize(Number(e.target.value))}
                   />
@@ -737,8 +1173,8 @@ export default function StudioApp() {
                   onClick={startWatermark}
                   disabled={isWmProcessing}
                 >
-                  {isWmProcessing ? <Loader2 className="animate-spin" size={20} /> : <Stamp size={20} />}
-                  Terapkan Watermark ke PDF
+                  {isWmProcessing ? <Loader2 className="animate-spin" size={18} /> : <Stamp size={18} />}
+                  {isWmProcessing ? 'Menerapkan Cap...' : 'Terapkan Watermark ke Semua Halaman'}
                 </button>
               </div>
             </section>
@@ -749,7 +1185,21 @@ export default function StudioApp() {
       {/* TAB 5: OCR */}
       {activeTab === 'ocr' && (
         <div className="tab-content">
-          <section className="card upload-card">
+          <section
+            className={`card upload-card ${isDraggingOcr ? 'drag-over' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDraggingOcr(true);
+            }}
+            onDragLeave={() => setIsDraggingOcr(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingOcr(false);
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                setOcrFile(e.dataTransfer.files[0]);
+              }
+            }}
+          >
             <input
               type="file"
               id="ocr-input"
@@ -761,47 +1211,51 @@ export default function StudioApp() {
             />
             <label htmlFor="ocr-input" className="upload-content">
               <div className="upload-icon-wrapper">
-                <FileText className="upload-icon" size={32} />
+                <FileText className="upload-icon" size={28} />
               </div>
-              <h3>{ocrFile ? ocrFile.name : 'Pilih Berkas PDF atau Gambar untuk OCR'}</h3>
+              <h3>{ocrFile ? ocrFile.name : 'Pilih Berkas PDF atau Gambar untuk Ekstraksi OCR'}</h3>
+              <p>Mengekstrak karakter teks langsung di memori komputer Anda</p>
             </label>
           </section>
 
           {ocrFile && (
             <section className="card">
-              <div className="action-bar">
+              <div className="action-bar" style={{ marginTop: 0 }}>
                 <button
                   type="button"
                   className="btn btn-primary btn-large"
                   onClick={startOcr}
                   disabled={isOcrRunning}
                 >
-                  {isOcrRunning ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+                  {isOcrRunning ? <Loader2 className="animate-spin" size={18} /> : <FileText size={18} />}
                   {isOcrRunning ? ocrProgressText : 'Mulai Ekstraksi Teks (OCR)'}
                 </button>
               </div>
 
               {ocrText && (
                 <div className="ocr-result-card">
-                  <h4 className="setting-label" style={{ marginBottom: '0.5rem' }}>Teks Hasil Ekstraksi:</h4>
-                  <textarea
-                    className="custom-input ocr-textarea"
-                    rows={10}
-                    value={ocrText}
-                    readOnly
-                  ></textarea>
-                  <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <div className="results-header" style={{ marginBottom: '0.75rem' }}>
+                    <h4 className="section-title" style={{ margin: 0, padding: 0, border: 'none' }}>
+                      <FileText size={16} />
+                      <span>Hasil Teks Terekstrak</span>
+                    </h4>
                     <button
                       type="button"
                       className="btn btn-secondary btn-small"
                       onClick={() => {
                         navigator.clipboard.writeText(ocrText);
-                        showToast('Teks berhasil disalin!', 'success');
+                        showToast('Teks berhasil disalin ke clipboard!', 'success');
                       }}
                     >
                       <Copy size={14} /> Salin Teks
                     </button>
                   </div>
+                  <textarea
+                    className="custom-input ocr-textarea"
+                    rows={12}
+                    value={ocrText}
+                    readOnly
+                  ></textarea>
                 </div>
               )}
             </section>
